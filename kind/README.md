@@ -1,29 +1,20 @@
-First clone this repo and switch to kind folder 
+This script (kind.sh and related files) will create several kind clusters on a server and interconnect them with KubeSlice.
 
-3 clusters deployment upto iperf connectivity(one cluster as hub and other two are spoke clusters)
+By default, it will create 1 "controller" and 2 "worker" clusters, connect them, and install iperf client/server in the two worker clusters to demonstrate connectivity.    To use:
 
-Provision hub and two spoke clusters by using shell script and also (it will Install cert-manager, hub-system, project, clusters-registration, kubeslice-operator, slice and iperf deployments)
-
-```shell
-chmod 777 kind.sh
-sh kind.sh
+```
+git clone git@github.com:kubeslice/examples.git
+cd examples/kind
+bash kind.sh
 ```
 
-Provision hub and two spoke clusters only by using shell script
+See supported options by doing...
 
-```shell
-chmod 777 kind-clusters.sh
-sh kind-clusters.sh
+```
+kind.sh --help 
 ```
 
-CleanUP hub and spoke clusters by using shell script
-
-```shell
-sh kind.sh clean
+When done, cleanup your clusters with...
 ```
-
-Note: ``` helm repo add kubeslice https://kubeslice.aveshalabs.io/repository/kubeslice-helm/ --username <USERNAME> --password '<PASSWORD>' ```
-
-
-Reference for hub-system, kubeslice-operator, slice and iperf installations
-https://avesha.atlassian.net/wiki/spaces/DEVOPS/pages/2280390676/Kind-Clusters%3A+deploy+hub-sytem%2C+kubeslice-operator%2C+slice+and+iperf
+kind.sh --clean
+```
