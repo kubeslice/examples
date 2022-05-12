@@ -1,0 +1,40 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: SliceConfig
+metadata:
+  name: convoy
+spec:
+  sliceSubnet: 10.1.0.0/16
+  sliceType: Application
+  sliceGatewayProvider:
+    sliceGatewayType: OpenVPN
+    sliceCaType: Local
+  sliceIpamType: Local
+  clusters:
+    - SPOKE1
+    - SPOKE2
+  qosProfileDetails:
+    queueType: HTB
+    priority: 1
+    tcType: BANDWIDTH_CONTROL
+    bandwidthCeilingKbps: 5120
+    bandwidthGuaranteedKbps: 2560
+    dscpClass: AF11
+  # externalGatewayConfig:
+  #   - ingress:
+  #       enabled: false
+  #     egress:
+  #       enabled: true
+  #     nsIngress:
+  #       enabled: false
+  #     gatewayType: istio
+  #     clusters:
+  #       - kind-spoke-1
+  #   - ingress:
+  #       enabled: true
+  #     egress:
+  #       enabled: false 
+  #     nsIngress:
+  #       enabled: false
+  #     gatewayType: istio 
+  #     clusters:
+  #       - kind-spoke-2

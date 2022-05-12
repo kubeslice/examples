@@ -1,0 +1,9 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: Project
+metadata:
+  name: avesha
+  namespace: kubeslice-controller
+spec:
+  serviceAccount:
+    readWrite:
+      - kumar

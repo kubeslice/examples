@@ -1,0 +1,6 @@
+# Skip the file generated from kind templates
+kind/clusters-registration.yaml
+kind/controller-config.yaml
+kind/slice.yaml
+kind/worker-*.config.yaml
+
