@@ -1,6 +1,6 @@
 # kind.sh
 
-This script (kind.sh and related files) will create several kind clusters on a server and interconnect them with KubeSlice.
+This bash script (kind.sh and related files) will create several kind clusters on a server and interconnect them with KubeSlice.   This script has been tested on Ubuntu VMs with 8GB RAM.
 
 By default, it will create 1 "controller" and 2 "worker" clusters, connect them, and install iperf client/server in the two worker clusters to demonstrate connectivity.    To use:
 
