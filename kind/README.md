@@ -20,3 +20,6 @@ When done, cleanup your clusters with...
 ```
 bash kind.sh --clean
 ```
+
+## More Info
+A description of how to configure kind clusters from scratch is available at [Getting Started with Kind Clusters](https://docs.avesha.io/opensource/getting-started-with-kind-clusters)
