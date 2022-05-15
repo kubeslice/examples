@@ -16,9 +16,10 @@
 
 ENV=kind.env
 CLEAN=false
+VERBOSE=false
 
 # First, check args
-VALID_ARGS=$(getopt -o che: --long clean,help,env: -- "$@")
+VALID_ARGS=$(getopt -o chve: --long clean,help,verbose,env: -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -44,6 +45,10 @@ while [ : ]; do
         shift
 	exit 0
         ;;
+    -v | --verbose)
+        VERBOSE=true
+        shift
+        ;;
     --) shift; 
         break 
         ;;
@@ -58,7 +63,6 @@ HUB_TEMPLATE="hub.template.yaml"
 SPOKE_TEMPLATE="spoke.template.yaml"
 SLICE_TEMPLATE="slice.template.yaml"
 REGISTRATION_TEMPLATE="clusters-registration.template.yaml"
-PREFIX="kind-"
 
 CLUSTERS=($HUB)
 CLUSTERS+=(${SPOKES[*]})
@@ -141,24 +145,26 @@ for CLUSTER in ${SPOKES[@]}; do
     kubectl cluster-info --context $PREFIX$CLUSTER
 done
 
-# Log all the commands (w/o having to echo them)
-set -o xtrace
+# See if we're being asked to be chatty
+if [ "$VERBOSE" == true ]; then
+    # Log all the commands (w/o having to echo them)
+    set -o xtrace
+fi
 
 # Helm repo access
+echo Setting up helm...
 helm repo remove kubeslice
 helm repo add kubeslice  https://kubeslice.github.io/charts/
-
 helm repo update
 
 # Hub setup...
-echo Switch to hub context...
+echo Switch to controller context and set it up...
 kubectx $PREFIX$HUB
 kubectx
 
-echo
 helm install cert-manager kubeslice/cert-manager --namespace cert-manager  --create-namespace --set installCRDs=true
 
-echo Check for status...
+echo "Check for cert-manager pods"
 kubectl get pods -n cert-manager
 echo "Wait for cert-manager to be Running"
 sleep 30
@@ -179,6 +185,7 @@ HFILE=$HUB-config.yaml
 cp $HUB_TEMPLATE $HFILE
 sed -i "s/ENDPOINT/$HUB_ENDPOINT/g" $HFILE
 
+echo "Install the kubeslice-controller"
 helm install kubeslice-controller kubeslice/kubeslice-controller -f controller-config.yaml --namespace kubeslice-controller --create-namespace $CONTROLLER_VERSION
 
 echo Check for status...
@@ -202,7 +209,7 @@ for SPOKE in ${SPOKES[@]}; do
 done
 
 
-echo kubectl apply -f clusters-registration.yaml -n kubeslice-avesha
+echo "Register clusters"
 kubectl apply -f clusters-registration.yaml -n kubeslice-avesha
 
 echo kubectl get clusters -n kubeslice-avesha
@@ -233,12 +240,14 @@ for SPOKE in ${SPOKES[@]}; do
     TOKEN=`echo -n $TOKEN`
     CLUSTERNAME=`echo -n $SPOKE`
 
-    echo Namespace $NAMESPACE
-    echo Endpoint $ENDPOINT
-    echo Ca.crt $CACRT
-    echo Token $TOKEN
-    echo ClusterName $CLUSTERNAME
-
+    if [ "$VERBOSE" == true ]; then
+	echo Namespace $NAMESPACE
+	echo Endpoint $ENDPOINT
+	echo Ca.crt $CACRT
+	echo Token $TOKEN
+	echo ClusterName $CLUSTERNAME
+    fi
+    
     # Convert the template info a .yaml for this spoke
     SFILE=$SPOKE.config.yaml
     cp $SPOKE_TEMPLATE $SFILE
@@ -262,7 +271,7 @@ for SPOKE in ${SPOKES[@]}; do
 done
 
 sleep 60
-echo Switch to hub context...
+echo Switch to hub context and configure slices...
 kubectx $PREFIX$HUB
 kubectx
 
@@ -282,20 +291,17 @@ kubectl apply -f $SFILE -n kubeslice-avesha
 echo "Wait for vl3(slice) and gateway pod to be Running in spoke clusters"
 sleep 120
 
-# Switch to kind-spoke-1 context
-kubectx $PREFIX${SPOKES[0]}
-kubectx
-
-kubectl get pods -n kubeslice-system
-
-# Switch to kind-spoke-2 context
-kubectx $PREFIX${SPOKES[1]}
-kubectx
-
-kubectl get pods -n kubeslice-system
+echo "Final status check..."
+for SPOKE in ${SPOKES[@]}; do
+    echo $PREFIX$SPOKE
+    kubectx $PREFIX$SPOKE
+    kubectx
+    kubectl get pods -n kubeslice-system
+done
 
 
 # Iperf setup
+echo Setup Iperf
 # Switch to kind-spoke-1 context
 kubectx $PREFIX${SPOKES[0]}
 kubectx
