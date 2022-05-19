@@ -21,5 +21,19 @@ When done, cleanup your clusters with...
 bash kind.sh --clean
 ```
 
+# tutorial.sh
+
+This bash script will walk through the clusters that were created by kind.sh and explain the various elements and how they connect.
+
+```
+bash tutorial.sh
+```
+
+See supported options by doing...
+
+```
+bash tutorial.sh --help 
+```
+
 ## More Info
 A description of how to configure kind clusters from scratch is available at [Getting Started with Kind Clusters](https://docs.avesha.io/opensource/getting-started-with-kind-clusters)
