@@ -1,0 +1,10 @@
+---
+- hosts: ec2
+  become: true
+
+  roles:
+    - docker
+    - kind
+    - kubectl
+    - helm
+    - kubectx
