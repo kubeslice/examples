@@ -35,6 +35,10 @@ jobs:
           sudo ln -s /usr/local/kubectx/kubectx /usr/local/bin/kubectx
           sudo ln -s /usr/local/kubectx/kubens /usr/local/bin/kubens
           
+          sudo sysctl fs.inotify.max_user_instances=8192
+          sudo sysctl fs.inotify.max_user_watches=524288
+          sudo sysctl -p
+          
           sudo git clone https://github.com/kubeslice/examples.git
           cd examples/kind
           sudo bash kind.sh
