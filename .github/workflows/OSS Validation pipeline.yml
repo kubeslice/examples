@@ -34,7 +34,4 @@ jobs:
           git clone https://github.com/kubeslice/examples.git
           ls && pwd
           cd examples/kind
-          bash kind.sh
-          #pwd
-          #chmod +x /home/runner/work/examples/examples/kind/kind.sh
-          #/home/runner/work/examples/examples/kind/kind.sh
+          kind.sh
