@@ -15,9 +15,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build" which validates the OSS kubeslice/charts repo
+  # This workflow contains a single job called "build" which validates the kubeslice/charts or kubeslice/dev-charts 
   build:
-    if: github.repository == 'kubeslice/charts/charts/kubeslice-controller/ '
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
