@@ -36,4 +36,4 @@ jobs:
           sudo ln -s /usr/local/kubectx/kubens /usr/local/bin/kubens
           
           sudo git clone https://github.com/kubeslice/examples.git /usr/local/examples/kind
-          sudo kind.sh
+          sudo ls -l /usr/local/examples/kind/kind.sh
