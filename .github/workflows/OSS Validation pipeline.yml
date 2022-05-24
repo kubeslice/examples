@@ -3,12 +3,19 @@
 
 name: OSS Validation
 
-# Only trigger, when the build workflow succeeded
+# Controls when the workflow will run
 on:
-  workflow_run:
-    workflows: ["pages build and deployment"]
-    types:
-      - completed
+  push:
+    # Triggers the workflow on push request events but only for the master branch
+    # Pattern matched against refs/tags
+    branches: [ master ]
+
+# Only trigger, when the build workflow succeeded
+# on:
+#   workflow_run:
+#     workflows: ["pages build and deployment"]
+#     types:
+#       - completed
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
