@@ -6,9 +6,11 @@ name: OSS Validation
 # Only trigger, when the build workflow succeeded
 on:
   workflow_run:
-    workflows: ["pages build and deployment"]
+    workflows: [Release Helm Charts]
     types:
       - completed
+    branches:
+      - master
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -24,6 +26,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script that will configure multiple kind clusters and interconnect them with KubeSlice.
