@@ -9,8 +9,8 @@ on:
     # Triggers the workflow on push request events but only for the master branch
     # Pattern matched against refs/tags
     branches: [ master ]
-    tags:
-      - '*'           # Push events to every tag not containing /
+#    tags:
+#      - '*'           # Push events to every tag not containing /
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -19,7 +19,7 @@ on:
 jobs:
   # This workflow contains a single job called "build" which validates the OSS kubeslice/charts repo
   build:
-    if: github.repository == 'kubeslice/charts'
+   # if: github.repository == 'kubeslice/charts'
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
 
@@ -31,5 +31,5 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script that will configure multiple kind clusters and interconnect them with KubeSlice.
         run: |
-          chmod +x ./examples/kind/kind.sh
-          ./examples/kind/kind.sh
+          chmod +x ./kubeslice/examples/kind/kind.sh
+          ./kubeslice/examples/kind/kind.sh
