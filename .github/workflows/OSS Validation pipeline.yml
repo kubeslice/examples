@@ -33,4 +33,4 @@ jobs:
         run: |
           pwd
           chmod +x /home/runner/work/examples/examples/kind/kind.sh
-          sh /home/runner/work/examples/examples/kind/kind.sh
+          /home/runner/work/examples/examples/kind/kind.sh
