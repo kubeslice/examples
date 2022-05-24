@@ -32,5 +32,5 @@ jobs:
       - name: Run a multi-line script that will configure multiple kind clusters and interconnect them with KubeSlice.
         run: |
           pwd
-          #chmod +x ./kubeslice/examples/kind/kind.sh
-          #./kubeslice/examples/kind/kind.sh
+          chmod +x /home/runner/work/examples/examples/kind/kind.sh
+          sh /home/runner/work/examples/examples/kind/kind.sh
