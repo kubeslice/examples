@@ -1,13 +1,13 @@
 apiVersion: controller.kubeslice.io/v1alpha1
 kind: Cluster
 metadata:
-  name: SPOKE1
+  name: WORKER1
 spec:
   networkInterface: eth0
 ---
 apiVersion: controller.kubeslice.io/v1alpha1
 kind: Cluster
 metadata:
-  name: SPOKE2
+  name: WORKER2
 spec:
   networkInterface: eth0
