@@ -1,4 +1,4 @@
-## Base64 encoded secret values from hub cluster
+## Base64 encoded secret values from controller cluster
 controllerSecret:
   namespace: NAMESPACE
   endpoint: ENDPOINT
