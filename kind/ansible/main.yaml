@@ -1,5 +1,6 @@
 ---
 - hosts: ec2
+  connection: local
   become: true
 
   roles:
