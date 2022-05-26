@@ -6,6 +6,7 @@ if [ ! $(which ansible) ]; then
 #   command -v python3 >/dev/null 2>&1 && python3 -m pip install --user ansible
 
   if [ $(which python3) ]; then 
+    sudo apt install -y python3-pip
     python3 -m pip install --user ansible
   else 
     echo "python3 not found"

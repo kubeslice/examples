@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # 	Copyright (c) 2022 Avesha, Inc. All rights reserved. # # SPDX-License-Identifier: Apache-2.0
 #
@@ -15,7 +15,7 @@
 #	limitations under the License.
 
 
-if [ "$OSS_CHARTS" -ne "charts" ] || [ "$OSS_CHARTS" -ne "dev-charts" ]; then
+if [[ "$OSS_CHARTS" != "charts" ]] || [[ "$OSS_CHARTS" != "dev-charts" ]]; then
     ENV=kind.env
 fi
 
