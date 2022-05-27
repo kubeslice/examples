@@ -257,7 +257,7 @@ for WORKER in ${WORKERS[@]}; do
     sed -i "s/TOKEN/$TOKEN/g" $WFILE
     sed -i "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
 
-CONTROLLER_ENDPOINT
+
     # Switch to worker context
     kubectx $PREFIX$WORKER
     WORKERNODEIP=`kubectl get nodes -o wide | grep $WORKER-worker | head -1 | awk '{ print $6 }'`
