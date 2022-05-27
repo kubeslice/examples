@@ -26,4 +26,6 @@ ansible-playbook -i ./ansible/hosts ansible/main.yaml
 
 # bash ${PWD}/kind.sh
 
+echo "Dependencies installed"
+
 exit 0
