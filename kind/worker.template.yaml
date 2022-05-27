@@ -6,5 +6,5 @@ controllerSecret:
   token: TOKEN
 
 cluster:
-  name: SPOKENAME
+  name: WORKERNAME
   nodeIp: NODEIP
