@@ -24,6 +24,6 @@ echo "Docker: post-installation steps"
 sudo usermod -aG docker $USER
 newgrp docker 
 
-bash ${PWD}/kind.sh
+# bash ${PWD}/kind.sh
 
 exit 0
