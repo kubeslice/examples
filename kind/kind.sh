@@ -14,11 +14,7 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
-
-if [[ "$OSS_CHARTS" != "charts" ]] || [[ "$OSS_CHARTS" != "dev-charts" ]]; then
-    ENV=kind.env
-fi
-
+ENV=kind.env
 CLEAN=false
 VERBOSE=false
 
@@ -158,12 +154,7 @@ fi
 # Helm repo access
 echo Setting up helm...
 helm repo remove kubeslice
-if [ "$OSS_CHARTS" == "charts" ]; then
-    helm repo add kubeslice  https://kubeslice.github.io/charts/
-elif [ "$OSS_CHARTS" == "dev-charts" ]; then
-    helm repo add kubeslice https://raw.githubusercontent.com/kubeslice/dev-charts/gh-pages/ --username KRANTHI0918 --password $CR_TOKEN
-fi
-
+helm repo add kubeslice  https://kubeslice.github.io/charts/
 helm repo update
 
 # Controller setup...
@@ -190,9 +181,9 @@ DECODE_CONTROLLER_ENDPOINT=`echo -n https://$CONTROLLER_ENDPOINT | base64`
 echo Endpoint after base64 is: $DECODE_CONTROLLER_ENDPOINT
 
 # Make a controller values yaml from the controller template yaml
-HFILE=$CONTROLLER-config.yaml
-cp $CONTROLLER_TEMPLATE $HFILE
-sed -i "s/ENDPOINT/$CONTROLLER_ENDPOINT/g" $HFILE
+CFILE=$CONTROLLER-config.yaml
+cp $CONTROLLER_TEMPLATE $CFILE
+sed -i "s/ENDPOINT/$CONTROLLER_ENDPOINT/g" $CFILE
 
 echo "Install the kubeslice-controller"
 helm install kubeslice-controller kubeslice/kubeslice-controller -f controller-config.yaml --namespace kubeslice-controller --create-namespace $CONTROLLER_VERSION
@@ -258,20 +249,20 @@ for WORKER in ${WORKERS[@]}; do
     fi
     
     # Convert the template info a .yaml for this worker
-    SFILE=$WORKER.config.yaml
-    cp $WORKER_TEMPLATE $SFILE
-    sed -i "s/NAMESPACE/$NAMESPACE/g" $SFILE
-    sed -i "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $SFILE
-    sed -i "s/CACRT/$CACRT/g" $SFILE
-    sed -i "s/TOKEN/$TOKEN/g" $SFILE
-    sed -i "s/WORKERNAME/$CLUSTERNAME/g" $SFILE
+    WFILE=$WORKER.config.yaml
+    cp $WORKER_TEMPLATE $WFILE
+    sed -i "s/NAMESPACE/$NAMESPACE/g" $WFILE
+    sed -i "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $WFILE
+    sed -i "s/CACRT/$CACRT/g" $WFILE
+    sed -i "s/TOKEN/$TOKEN/g" $WFILE
+    sed -i "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
 
 
     # Switch to worker context
     kubectx $PREFIX$WORKER
     WORKERNODEIP=`kubectl get nodes -o wide | grep $WORKER-worker | head -1 | awk '{ print $6 }'`
-    sed -i "s/NODEIP/$WORKERNODEIP/g" $SFILE
-    helm install kubeslice-worker kubeslice/kubeslice-worker -f $SFILE --namespace kubeslice-system  --create-namespace $WORKER_VERSION
+    sed -i "s/NODEIP/$WORKERNODEIP/g" $WFILE
+    helm install kubeslice-worker kubeslice/kubeslice-worker -f $WFILE --namespace kubeslice-system  --create-namespace $WORKER_VERSION
     echo Check for status...
     kubectl get pods -n kubeslice-system
     echo "Wait for kubeslice-system to be Running"
