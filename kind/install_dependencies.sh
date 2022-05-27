@@ -23,3 +23,5 @@ ansible-playbook -i ./ansible/hosts ansible/main.yaml
 echo "Docker: post-installation steps"
 sudo usermod -aG docker $USER
 newgrp docker 
+
+exit 0
