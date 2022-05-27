@@ -10,8 +10,8 @@ spec:
     sliceCaType: Local
   sliceIpamType: Local
   clusters:
-    - SPOKE1
-    - SPOKE2
+    - WORKER1
+    - WORKER2
   qosProfileDetails:
     queueType: HTB
     priority: 1
@@ -28,7 +28,7 @@ spec:
   #       enabled: false
   #     gatewayType: istio
   #     clusters:
-  #       - kind-spoke-1
+  #       - kind-worker-1
   #   - ingress:
   #       enabled: true
   #     egress:
@@ -37,4 +37,4 @@ spec:
   #       enabled: false
   #     gatewayType: istio 
   #     clusters:
-  #       - kind-spoke-2
+  #       - kind-worker-2
