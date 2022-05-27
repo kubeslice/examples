@@ -15,10 +15,7 @@
 #	limitations under the License.
 
 
-if [ "$OSS_CHARTS" -ne "charts" ] || [ "$OSS_CHARTS" -ne "dev-charts" ]; then
-    ENV=kind.env
-fi
-
+ENV=kind.env
 CLEAN=false
 VERBOSE=false
 
@@ -158,12 +155,7 @@ fi
 # Helm repo access
 echo Setting up helm...
 helm repo remove kubeslice
-if [ "$OSS_CHARTS" == "charts" ]; then
-    helm repo add kubeslice  https://kubeslice.github.io/charts/
-elif [ "$OSS_CHARTS" == "dev-charts" ]; then
-    helm repo add kubeslice https://raw.githubusercontent.com/kubeslice/dev-charts/gh-pages/ --username KRANTHI0918 --password $CR_TOKEN
-fi
-
+helm repo add kubeslice  https://kubeslice.github.io/charts/
 helm repo update
 
 # Controller setup...
