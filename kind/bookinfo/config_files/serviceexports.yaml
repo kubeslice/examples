@@ -1,7 +1,7 @@
 ##################################################################################
 # Details ServiceExport
 ##################################################################################
-apiVersion: mesh.avesha.io/v1beta1
+apiVersion: networking.kubeslice.io/v1beta1
 kind: ServiceExport
 metadata:
   name: details
@@ -19,7 +19,7 @@ spec:
 ##################################################################################
 # Reviews ServiceExport
 ##################################################################################
-apiVersion: mesh.avesha.io/v1beta1
+apiVersion: networking.kubeslice.io/v1beta1
 kind: ServiceExport
 metadata:
   name: reviews
