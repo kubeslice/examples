@@ -1,0 +1,35 @@
+##################################################################################
+# Details ServiceExport
+##################################################################################
+apiVersion: mesh.avesha.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: details
+spec:
+  slice: convoy  #Replace Slice Name
+  selector:
+    matchLabels:
+      app: details
+  ingressEnabled: false
+  ports:
+  - name: http
+    containerPort: 9080
+    protocol: TCP
+---
+##################################################################################
+# Reviews ServiceExport
+##################################################################################
+apiVersion: mesh.avesha.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: reviews
+spec:
+  slice: convoy  #Replace Slice Name
+  selector:
+    matchLabels:
+      app: reviews
+  ingressEnabled: false
+  ports:
+  - name: http
+    containerPort: 9080
+    protocol: TCP
