@@ -10,8 +10,7 @@ spec:
     sliceCaType: Local
   sliceIpamType: Local
   clusters:
-    - WORKER1
-    - WORKER2
+    - WORKER
   qosProfileDetails:
     queueType: HTB
     priority: 1
