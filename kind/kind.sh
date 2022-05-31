@@ -197,27 +197,26 @@ kubectl get pods -n kubeslice-controller
 
 echo kubectl apply -f project.yaml -n kubeslice-controller
 kubectl apply -f project.yaml -n kubeslice-controller
+sleep 10
 
-# Slice setup
-# Make a slice.yaml from the slice.template.yaml
-REGFILE=clusters-registration.yaml
-cp $REGISTRATION_TEMPLATE $REGFILE
-SCOUNT=1
-for WORKER in ${WORKERS[@]}; do
-    sed -i "s/WORKER$SCOUNT/$WORKER/g" $REGFILE
-    SCOUNT=$((SCOUNT+1))
-done
-
-
-echo "Register clusters"
-kubectl apply -f clusters-registration.yaml -n kubeslice-avesha
-
-echo kubectl get clusters -n kubeslice-avesha
-kubectl get clusters -n kubeslice-avesha
+echo kubectl get project -n kubeslice-avesha
+kubectl get project -n kubeslice-avesha
 
 echo kubectl get sa -n kubeslice-avesha
 kubectl get sa -n kubeslice-avesha
 
+# Clusters registration setup
+# Make a clusters-registration.yaml from the clusters-registration.template.yaml
+REGFILE=clusters-registration.yaml
+echo "Register clusters"
+for WORKER in ${WORKERS[@]}; do
+    cp $REGISTRATION_TEMPLATE $REGFILE
+    sed -i "s/WORKER/$WORKER/g" $REGFILE
+    kubectl apply -f clusters-registration.yaml -n kubeslice-avesha
+done
+
+echo kubectl get clusters -n kubeslice-avesha
+kubectl get clusters -n kubeslice-avesha
 
 # Worker setup
 # Get secret info from controller...
@@ -226,7 +225,6 @@ for WORKER in ${WORKERS[@]}; do
     kubectx $PREFIX$CONTROLLER
 
     SECRET=`kubectl get secrets -n kubeslice-avesha| grep $WORKER | awk '{print $1}'`
-    SECRET= `echo -n $SECRET`
     echo Secret for worker $WORKER is: $SECRET
 
     # Don't use endpoint from the secrets file... use the one we created above
@@ -279,11 +277,11 @@ kubectx
 # Make a slice.yaml from the slice.template.yaml
 SFILE=slice.yaml
 cp $SLICE_TEMPLATE $SFILE
-SCOUNT=1
 for WORKER in ${WORKERS[@]}; do
-    sed -i "s/WORKER$SCOUNT/$WORKER/g" $SFILE
-    SCOUNT=$((SCOUNT+1))
+    sed -i "s/- WORKER/- $WORKER/g" $SFILE
+    sed -i "/- $WORKER/ a \ \ \ \ - WORKER" $SFILE
 done
+sed -i '/- WORKER/d' $SFILE
 
 echo kubectl apply -f $SFILE -n kubeslice-avesha
 kubectl apply -f $SFILE -n kubeslice-avesha
@@ -313,14 +311,17 @@ sleep 60
 kubectl get pods -n iperf
 
 # Switch to kind-worker-2 context
-kubectx $PREFIX${WORKERS[1]}
-kubectx
-
-kubectl create ns iperf
-kubectl apply -f iperf-server.yaml -n iperf
-echo "Wait for iperf to be Running"
-sleep 60
-kubectl get pods -n iperf
+for WORKER in ${WORKERS[@]}; do
+    if [[ $WORKER -ne ${WORKERS[0]} ]]; then 
+        kubectx $PREFIX$WORKER
+        kubectx
+        kubectl create ns iperf
+        kubectl apply -f iperf-server.yaml -n iperf
+        echo "Wait for iperf to be Running"
+        sleep 60
+        kubectl get pods -n iperf
+    fi
+done
 
 # Switch to worker context
 kubectx $PREFIX${WORKERS[0]}
