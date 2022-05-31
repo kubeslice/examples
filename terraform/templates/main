@@ -1,16 +1,16 @@
 variable "region" {
   type  = string
-  default = "sa-east-1"
+  default = <REGION>
 }
 
 variable "key_pair" {
   type  = string
-  default = "kubeslice-ec2"
+  default = <KEY_PAIR>
 }
 
 variable "key_pair_file" {
   type  = string
-  default = "/Users/juanveras/Documents/avesha/github/examples/ssh_key/kubeslice-ec2.pem"
+  default = <KEY_PAIR_FILE>
 }
 
 provider "aws" {
