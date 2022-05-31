@@ -68,16 +68,16 @@ show "This script will walk you through KubeSlice as configured by the kind.sh s
 
 key
 
-WORKERS=${SPOKES[@]}
+WORKER=${WORKERS[@]}
 
-show "First, let's review the clusters that were created for you.   You have a KubeSlice 'controller' cluster named $HUB and several KubeSlice 'worker' clusters named $WORKERS.   Using the tool kubectx, we'll switch through each of them and review what is inside each cluster."
+show "First, let's review the clusters that were created for you.   You have a KubeSlice 'controller' cluster named $CONTROLLER and several KubeSlice 'worker' clusters named $WORKER.   Using the tool kubectx, we'll switch through each of them and review what is inside each cluster."
 
 (set -x; kubectx)
 
 key
 
 show "Let's go to the controller context..."
-(set -x; kubectx $PREFIX$HUB)
+(set -x; kubectx $PREFIX$CONTROLLER)
 
 show "The controller has nodes..."
 (set -x; kubectl get nodes -o wide)
