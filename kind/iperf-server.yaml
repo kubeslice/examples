@@ -5,6 +5,8 @@ metadata:
   namespace: iperf
   labels:
     app: iperf-server
+  annotations:
+    avesha.io/slice: convoy
 spec:
   replicas: 1
   selector:
