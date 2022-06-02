@@ -154,7 +154,7 @@ fi
 # Helm repo access
 echo Setting up helm...
 helm repo remove kubeslice
-helm repo add kubeslice  https://kubeslice.github.io/charts/
+helm repo add kubeslice $REPO
 helm repo update
 
 # Controller setup...
@@ -332,5 +332,10 @@ sleep 90
 IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
 
 kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
+if [ $? -ne 0 ]; then
+    echo '***Error: Connectivity between clusters not succesful!'
+    ERR=$((ERR+1))
+fi
 
-exit 0
+# Return status
+exit $ERR
