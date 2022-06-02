@@ -2,9 +2,17 @@
 
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONFIG_DIR=${BASE_DIR}/config_files
+ENV_FILE=${BASE_DIR}/../kind.env
 
-PRODUCT_CLUSTER="kind-worker-1"
-SERVICES_CLUSTER="kind-worker-2"
+if [[ ! -f $ENV_FILE ]]; then
+  echo "${ENV_FILE} file not found! Exiting"
+  exit 1
+fi
+
+source $ENV_FILE
+
+PRODUCT_CLUSTER="${PREFIX}-${WORKERS[0]}"
+SERVICES_CLUSTER="${PREFIX}-${WORKERS[1]}"
 BOOKINFO_NAMESPACE=bookinfo
 
 kubectx $PRODUCT_CLUSTER
