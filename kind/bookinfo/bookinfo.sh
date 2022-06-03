@@ -84,7 +84,7 @@ wait_for_pods
 
 kubectl apply -f ${CONFIG_DIR}/serviceexports.yaml -n $BOOKINFO_NAMESPACE
 echo "Waiting for serviceeport to be created"
-wait 30
+sleep 30
 
 echo "Verifying serviceexport"
 kubectl get serviceexport -n $BOOKINFO_NAMESPACE
