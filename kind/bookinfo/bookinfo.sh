@@ -2,6 +2,9 @@
 
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONFIG_DIR=${BASE_DIR}/config_files
+
+PRODUCT_CLUSTER="kind-worker-1"
+SERVICES_CLUSTER="kind-worker-2"
 ENV_FILE=${BASE_DIR}/../kind.env
 
 if [[ ! -f $ENV_FILE ]]; then
@@ -14,6 +17,30 @@ source $ENV_FILE
 PRODUCT_CLUSTER="${PREFIX}${WORKERS[0]}"
 SERVICES_CLUSTER="${PREFIX}${WORKERS[1]}"
 BOOKINFO_NAMESPACE=bookinfo
+
+uninstall() {
+    for cluster in $SERVICES_CLUSTER $PRODUCT_CLUSTER; do
+      echo "Deleting namespace $BOOKINFO_NAMESPACE on cluster $cluster"
+      kubectx $cluster
+      [[ $(kubectl get namespaces | grep $BOOKINFO_NAMESPACE) ]] && kubectl delete namespace $BOOKINFO_NAMESPACE
+    done
+}
+
+help() {
+    echo "Usage: bookinfo.sh [--delete]"
+}
+
+# Get the options
+while getopts ":d:delete:help:" option; do
+  case $option in
+    d | delete) # Uninstall
+      uninstall
+      exit;;
+    h |help)
+      help
+      exit;;
+   esac
+done
 
 kubectx $PRODUCT_CLUSTER
 kubectl create namespace $BOOKINFO_NAMESPACE
