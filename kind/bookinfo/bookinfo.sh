@@ -83,8 +83,8 @@ echo "Waiting for pods to be ready"
 wait_for_pods
 
 kubectl apply -f ${CONFIG_DIR}/serviceexports.yaml -n $BOOKINFO_NAMESPACE
-
-# echo "Reviewing pods on namespaces bookinfo - $SERVICES_CLUSTER"
+echo "Waiting for serviceeport to be created"
+wait 30
 
 echo "Verifying serviceexport"
 kubectl get serviceexport -n $BOOKINFO_NAMESPACE
