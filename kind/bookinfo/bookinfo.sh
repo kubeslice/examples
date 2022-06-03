@@ -11,33 +11,9 @@ fi
 
 source $ENV_FILE
 
-PRODUCT_CLUSTER="${PREFIX}${WORKERS[0]}"
-SERVICES_CLUSTER="${PREFIX}${WORKERS[1]}"
+PRODUCT_CLUSTER="${PREFIX}-${WORKERS[0]}"
+SERVICES_CLUSTER="${PREFIX}-${WORKERS[1]}"
 BOOKINFO_NAMESPACE=bookinfo
-
-uninstall() {
-    for cluster in $SERVICES_CLUSTER $PRODUCT_CLUSTER; do
-      echo "Deleting namespace $BOOKINFO_NAMESPACE on cluster $cluster"
-      kubectx $cluster
-      [[ $(kubectl get namespaces | grep $BOOKINFO_NAMESPACE) ]] && kubectl delete namespace $BOOKINFO_NAMESPACE
-    done
-}
-
-help() {
-    echo "Usage: bookinfo.sh [--delete]"
-}
-
-# Get the options
-while getopts ":d:delete:help:" option; do
-  case $option in
-    d | delete) # Uninstall
-      uninstall
-      exit;;
-    h |help)
-      help
-      exit;;
-   esac
-done
 
 kubectx $PRODUCT_CLUSTER
 kubectl create namespace $BOOKINFO_NAMESPACE
@@ -80,8 +56,8 @@ echo "Waiting for pods to be ready"
 wait_for_pods
 
 kubectl apply -f ${CONFIG_DIR}/serviceexports.yaml -n $BOOKINFO_NAMESPACE
-echo "Waiting for serviceeport to be created"
-sleep 30
+
+# echo "Reviewing pods on namespaces bookinfo - $SERVICES_CLUSTER"
 
 echo "Verifying serviceexport"
 kubectl get serviceexport -n $BOOKINFO_NAMESPACE
