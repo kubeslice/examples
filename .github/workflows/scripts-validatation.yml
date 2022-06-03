@@ -1,0 +1,65 @@
+# This is a basic workflow to help you get started with Actions
+# Nightly Automation pipeline for validating the examples repo script for Opensource
+
+name: Scripts Validation
+
+on:
+  schedule:
+    # This workflow triggers the workflow every day at 5:30 and 17:30 UTC
+    - cron:  '30 5,17 * * *'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "validate" which validates the examples/kind scripts and runs on ubuntu-latest
+  validate-on-ubuntu:
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script that will configure multiple kind clusters and interconnect them with KubeSlice.
+        run: |
+
+          # prerequisites
+          sudo git clone https://github.com/ahmetb/kubectx /usr/local/kubectx
+          sudo ln -s /usr/local/kubectx/kubectx /usr/local/bin/kubectx
+          sudo ln -s /usr/local/kubectx/kubens /usr/local/bin/kubens
+          
+          # Increase the inotify.max_user_instances and inotify.max_user_watches sysctls on a Linux host
+          sudo sysctl fs.inotify.max_user_instances=8192
+          sudo sysctl fs.inotify.max_user_watches=524288
+          sudo sysctl -p
+
+          # Clone the examples repo
+          git clone https://github.com/kubeslice/examples.git
+          cd examples/kind
+
+          # Create custom.env file
+          sudo sed -i "s|PREFIX=.*|PREFIX=$CLUSTER_PREFIX|" kind.env
+          sudo sed -i "s|CONTROLLER=.*|CONTROLLER=$CONTROLLER_CLUSTER|" kind.env
+          sudo sed -i "s|WORKERS=.*|WORKERS=${{secrets.WORKER_CLUSTER}}|" kind.env
+          sudo sed -i "s|KIND_K8S_VERSION=.*|KIND_K8S_VERSION=$KIND_K8S_VERSION|" kind.env
+          sudo sed -i "s|REPO=.*|REPO=${{secrets.HELM_REPO}}|" kind.env
+          sudo cat kind.env
+          
+          # A script that will configure multiple kind clusters and interconnect them with KubeSlice
+          sudo bash kind.sh
+          
+        env:
+          CLUSTER_PREFIX: '"kind-"'
+          CONTROLLER_CLUSTER: '("controller")'
+          KIND_K8S_VERSION: '"--image=kindest/node:v1.22.7"'
