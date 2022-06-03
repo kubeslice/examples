@@ -18,6 +18,21 @@ PRODUCT_CLUSTER="${PREFIX}${WORKERS[0]}"
 SERVICES_CLUSTER="${PREFIX}${WORKERS[1]}"
 BOOKINFO_NAMESPACE=bookinfo
 
+uninstall() {
+    for cluster in $SERVICES_CLUSTER $PRODUCT_CLUSTER; do
+      [[ $(kubectl get namespaces | grep $BOOKINFO_NAMESPACE) ]] && kubectl delete namespace $BOOKINFO_NAMESPACE
+    done
+}
+
+# Get the options
+while getopts ":h" option; do
+   case $option in
+      -d | --delete) # Uninstall 
+         uninstall
+         exit;;
+   esac
+done
+
 kubectx $PRODUCT_CLUSTER
 kubectl create namespace $BOOKINFO_NAMESPACE
 
