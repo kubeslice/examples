@@ -2,9 +2,6 @@
 
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONFIG_DIR=${BASE_DIR}/config_files
-
-PRODUCT_CLUSTER="kind-worker-1"
-SERVICES_CLUSTER="kind-worker-2"
 ENV_FILE=${BASE_DIR}/../kind.env
 
 if [[ ! -f $ENV_FILE ]]; then
@@ -83,8 +80,8 @@ echo "Waiting for pods to be ready"
 wait_for_pods
 
 kubectl apply -f ${CONFIG_DIR}/serviceexports.yaml -n $BOOKINFO_NAMESPACE
-
-# echo "Reviewing pods on namespaces bookinfo - $SERVICES_CLUSTER"
+echo "Waiting for serviceeport to be created"
+wait 30
 
 echo "Verifying serviceexport"
 kubectl get serviceexport -n $BOOKINFO_NAMESPACE
