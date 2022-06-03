@@ -20,16 +20,25 @@ BOOKINFO_NAMESPACE=bookinfo
 
 uninstall() {
     for cluster in $SERVICES_CLUSTER $PRODUCT_CLUSTER; do
+      echo "Deleting namespace $BOOKINFO_NAMESPACE on cluster $cluster"
+      kubectx $cluster
       [[ $(kubectl get namespaces | grep $BOOKINFO_NAMESPACE) ]] && kubectl delete namespace $BOOKINFO_NAMESPACE
     done
 }
 
+help() {
+    echo "Usage: bookinfo.sh [--delete]"
+}
+
 # Get the options
-while getopts ":h" option; do
-   case $option in
-      -d | --delete) # Uninstall 
-         uninstall
-         exit;;
+while getopts ":d:delete:help:" option; do
+  case $option in
+    d | delete) # Uninstall
+      uninstall
+      exit;;
+    h |help)
+      help
+      exit;;
    esac
 done
 
