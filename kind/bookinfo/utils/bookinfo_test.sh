@@ -11,7 +11,7 @@
 # ...to make it a real-time demo
 
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-CONFIG_FILE=${BASE_DIR}/../kind.env
+CONFIG_FILE=${BASE_DIR}/../../kind.env
 
 if [[ -f $CONFIG_FILE ]]; then
   source $CONFIG_FILE
