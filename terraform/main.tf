@@ -127,8 +127,6 @@ resource "aws_security_group" "sgubuntu" {
 }
 
 output "test" {
-  SSH into this environment by doing...
-  ssh <user>@<address>
   value = <<-EOT
    SSH into this environment by doing...
    ssh -i ubuntu@${data.aws_ami.ubuntu.image_id}   
