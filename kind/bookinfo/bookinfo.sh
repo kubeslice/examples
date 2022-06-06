@@ -100,4 +100,4 @@ echo "**** Testing bookinfo services"
 echo "Waiting for services to be available"
 sleep 40
 
-bash ${BASE_DIR}/../utils/bookinfo_test.sh
+bash ${BASE_DIR}/utils/bookinfo_test.sh
