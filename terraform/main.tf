@@ -127,5 +127,8 @@ resource "aws_security_group" "sgubuntu" {
 }
 
 output "test" {
-  value = data.aws_ami.ubuntu.image_id
+  value = <<-EOT
+  SSH into this environment by doing (assuming you are at the root of the examples directory)...
+  ssh -i ./ssh_key/kubeslice-ec2.pem ubuntu@${data.aws_ami.ubuntu.image_id}
+  EOT
 }
