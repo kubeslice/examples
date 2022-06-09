@@ -37,7 +37,7 @@ then
 else
     echo "#### Bookinfo Reviews Page FAIL"
 fi
-echo curl http://$BI_ADDR_STRR":"$BI_PORT/productpage
+echo curl http://$BI_ADDR_STR":"$BI_PORT/productpage
 curl http://$BI_ADDR_STR":"$BI_PORT/productpage | egrep 'Type'  > /dev/null
 if [ $? -eq 0 ]
 then
