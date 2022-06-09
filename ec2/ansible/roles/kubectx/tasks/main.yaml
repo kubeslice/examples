@@ -1,0 +1,21 @@
+---
+
+- name: Clone kubectx repo
+  git:
+    repo: 'https://github.com/ahmetb/kubectx.git'
+    dest: /opt/kubectx
+
+- name: Create kubectx symbolic link
+  file:
+    src: /opt/kubectx/kubectx
+    dest: /usr/local/bin/kubectx
+    state: link
+    
+- name: Create kubens symbolic link
+  file:
+    src: /opt/kubectx/kubens
+    dest: /usr/local/bin/kubens
+    state: link
+    # https://github.com/ahmetb/kubectx.git
+    # sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
+    # sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens

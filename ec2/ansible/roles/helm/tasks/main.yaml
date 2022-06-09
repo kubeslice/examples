@@ -1,0 +1,20 @@
+---
+
+- name: Download helm binary file
+  get_url:
+    url: https://get.helm.sh/helm-v3.9.0-rc.1-linux-amd64.tar.gz
+    dest: /tmp/helm-v3.9.0-rc.1-linux-amd64.tar.gz
+    mode: u=x,g=x,o=x
+
+- name: Unpack helm package
+  unarchive:
+    src: /tmp/helm-v3.9.0-rc.1-linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: Copy helm binary to /usr/local/bin
+  copy: 
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin
+    mode: '0755'
+    remote_src: yes
