@@ -23,8 +23,8 @@ if [[ $OSTYPE == "darwin"* ]]; then
   export IS_MAC="true"
 fi
  
-TERRAFORM_VAR_FILE=${BASE_DIR}/terraform/main.tf
-TERRAFORM_VAR_TEMPLATE=${BASE_DIR}/terraform/templates/main
+TERRAFORM_VAR_FILE=${BASE_DIR}/terraform/terraform.tfvars
+TERRAFORM_VAR_TEMPLATE=${BASE_DIR}/terraform/templates/terraform.vars
 
 cat ${TERRAFORM_VAR_TEMPLATE} > ${TERRAFORM_VAR_FILE}
 

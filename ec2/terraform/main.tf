@@ -1,18 +1,3 @@
-variable "region" {
-  type  = string
-  default = "sa-east-1"
-}
-
-variable "key_pair" {
-  type  = string
-  default = "kubeslice-ec2"
-}
-
-variable "key_pair_file" {
-  type  = string
-  default = "/Users/juanveras/Documents/avesha/github/examples/ec2/ssh_key/kubeslice-ec2.pem"
-}
-
 provider "aws" {
   region = var.region
 }
@@ -60,40 +45,15 @@ resource "aws_instance" "ubuntu-ec2" {
     host        = self.public_ip
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update -y",
-      "git clone https://github.com/kubeslice/examples.git /tmp/examples",
-    ]
+  provisioner "file" {
+    source      = "templates/provisioner.sh"
+    destination = "/tmp/provisioner.sh"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "cd /tmp/examples",
-      "git checkout devops-510",
-      "chmod +x /tmp/examples/ec2/install_dependencies.sh",    
-      "cd /tmp/examples/ec2; ./install_dependencies.sh",
-      "sudo usermod -aG docker $USER",
-   #   "newgrp docker",
-      "sleep 10",
-    ]
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "cd /tmp/examples",
-      "git checkout devops-510",
-      "chmod +x /tmp/examples/kind/kind.sh",    
-      "cd /tmp/examples/kind; ./kind.sh",
-    ]
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "cd /tmp/examples",
-      "git checkout devops-510",
-      "chmod +x /tmp/examples/kind/bookinfo/bookinfo.sh",    
-      "cd /tmp/examples/kind/bookinfo; ./bookinfo.sh",
+      "chmod +x /tmp/provisioner.sh",
+      "/tmp/provisioner.sh",
     ]
   }
 }
