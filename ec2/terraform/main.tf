@@ -82,7 +82,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      # "git checkout devops-510",
+      "git checkout devops-510",
       "chmod +x /tmp/examples/kind/kind.sh",    
       "cd /tmp/examples/kind; ./kind.sh",
     ]
@@ -91,7 +91,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      # "git checkout devops-510",
+      "git checkout devops-510",
       "chmod +x /tmp/examples/kind/bookinfo/bookinfo.sh",    
       "cd /tmp/examples/kind/bookinfo; ./bookinfo.sh",
     ]
