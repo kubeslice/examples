@@ -71,8 +71,8 @@ resource "aws_instance" "ubuntu-ec2" {
     inline = [
       "cd /tmp/examples",
       "git checkout devops-510",
-      "chmod +x /tmp/examples/kind/install_dependencies.sh",    
-      "cd /tmp/examples/kind; ./install_dependencies.sh",
+      "chmod +x /tmp/examples/ec2/install_dependencies.sh",    
+      "cd /tmp/examples/ec2; ./install_dependencies.sh",
       "sudo usermod -aG docker $USER",
    #   "newgrp docker",
       "sleep 10",
