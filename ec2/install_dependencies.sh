@@ -20,12 +20,6 @@ PATH=$PATH:$(python3 -c "import site; print(site.USER_BASE)")/bin
 
 ansible-playbook -i ./ansible/hosts ansible/main.yaml
 
-echo "Docker: post-installation steps"
-sudo usermod -aG docker $USER
-newgrp docker 
-
-# bash ${PWD}/kind.sh
-
 echo "Dependencies installed"
 
 exit 0
