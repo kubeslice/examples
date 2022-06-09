@@ -10,7 +10,7 @@ variable "key_pair" {
 
 variable "key_pair_file" {
   type  = string
-  default = "/Users/juanveras/Documents/avesha/github/examples/ssh_key/kubeslice-ec2.pem"
+  default = "/Users/juanveras/Documents/avesha/github/examples/ec2/ssh_key/kubeslice-ec2.pem"
 }
 
 provider "aws" {
@@ -82,7 +82,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout devops-510",
+      # "git checkout devops-510",
       "chmod +x /tmp/examples/kind/kind.sh",    
       "cd /tmp/examples/kind; ./kind.sh",
     ]
@@ -91,7 +91,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout devops-510",
+      # "git checkout devops-510",
       "chmod +x /tmp/examples/kind/bookinfo/bookinfo.sh",    
       "cd /tmp/examples/kind/bookinfo; ./bookinfo.sh",
     ]
@@ -127,8 +127,5 @@ resource "aws_security_group" "sgubuntu" {
 }
 
 output "test" {
-  value = <<-EOT
-   SSH into this environment by doing...
-   ssh -i ubuntu@${data.aws_ami.ubuntu.image_id}   
-  EOT
+  value = data.aws_ami.ubuntu.image_id
 }
