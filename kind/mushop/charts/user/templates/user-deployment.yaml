@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "user.fullname" . }}
+  annotations:
+    avesha.io/slice: mu
+  labels: {{ include "user.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      app.kubernetes.io/name: {{ include "user.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        version: {{ .Values.image.tag | quote }}
+        app.kubernetes.io/name: {{ include "user.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        mockmode: {{ .Values.global.mock.service | quote }}
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    spec:
+      initContainers:
+        {{- include "user.init.wallet" . | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+          env: {{- include "user.oadb.connection" . | nindent 12 }}
+          volumeMounts: {{- include "user.mount.wallet" . | nindent 12 }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 120
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes: {{- include "user.volumes" . | nindent 8 }}
+      nodeSelector:
+        kubernetes.io/os: linux

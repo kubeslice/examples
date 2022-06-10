@@ -1,0 +1,20 @@
+global:
+  mock:
+    service: "all"
+
+tags:
+  streaming: false
+  atp: false
+
+payment:
+  enabled: false
+
+assets:
+  enabled: true
+
+nats:
+  enabled: false
+
+fulfillment:
+  enabled: false
+  
