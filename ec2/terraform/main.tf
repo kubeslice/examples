@@ -45,18 +45,6 @@ resource "aws_instance" "ubuntu-ec2" {
     host        = self.public_ip
   }
 
-  # provisioner "file" {
-  #   source      = "templates/provisioner.sh"
-  #   destination = "/tmp/provisioner.sh"
-  # }
-
-  # provisioner "remote-exec" {
-  #   inline = [
-  #     "chmod +x /tmp/provisioner.sh",
-  #     "/tmp/provisioner.sh",
-  #   ]
-  # }
-
   provisioner "remote-exec" {
     inline = [
       "sudo apt update -y",
@@ -123,6 +111,10 @@ resource "aws_security_group" "sgubuntu" {
   }]
 }
 
-output "test" {
-  value = data.aws_ami.ubuntu.image_id
+output "ssh_connection" {
+  value = <<-EOT
+  ssh to the created instance with:
+  ssh -i ssh_key/kubeslice-ec2.pem ubuntu@${aws_instance.ubuntu-ec2.public_dns} 
+  EOT
+  
 }
