@@ -3,8 +3,6 @@
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONFIG_DIR=${BASE_DIR}/config_files
 
-PRODUCT_CLUSTER="kind-worker-1"
-SERVICES_CLUSTER="kind-worker-2"
 ENV_FILE=${BASE_DIR}/../kind.env
 
 if [[ ! -f $ENV_FILE ]]; then
