@@ -1,0 +1,19 @@
+replicaCount: 1
+
+image:
+  repository: nats
+  tag: 2.7.1
+  pullPolicy: IfNotPresent
+
+exporter: 
+  repository: natsio/prometheus-nats-exporter
+  tag: 0.9.1
+  pullPolicy: IfNotPresent
+
+osb: {}
+
+service:
+  port:
+    client: 4222
+    monitoring: 8222
+    routes: 6222
