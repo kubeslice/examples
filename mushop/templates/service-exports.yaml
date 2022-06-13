@@ -1,0 +1,173 @@
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: api
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: api
+  ports:
+  - name: http
+    containerPort: 3000
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: edge
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: edge
+  ports:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: assets
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: assets
+  ports:
+  - name: http
+    containerPort: 3000
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: session
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: session
+  ports:
+  - name: http
+    containerPort: 6379
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: storefront
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: storefront
+  ports:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: carts
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: carts
+  ports:
+  - name: http
+    containerPort: 80
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: catalogue
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: catalogue
+  ports:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: fulfillment
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: fulfillment
+  ports:
+  - name: http
+    containerPort: 80
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: nats
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: nats
+  ports:
+  - name: client
+    containerPort: 4222
+    protocol: TCP
+  - name: routes
+    containerPort: 6222
+    protocol: TCP
+  - name: monitoring
+    containerPort: 8222
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: orders
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: orders
+  ports:
+  - name: http
+    containerPort: 80
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: payment
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: payment
+  ports:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+---
+apiVersion:  networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: user
+spec:
+  slice: mu
+  selector:
+    matchLabels:
+      app: user
+  ports:
+  - name: http
+    containerPort: 3000
+    protocol: TCP

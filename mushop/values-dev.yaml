@@ -1,0 +1,59 @@
+global:
+  ociAuthSecret: oci-credentials        # OCI authentication credentials secret name
+  ossStreamSecret: oss-connection       # Previously created streaming secret name
+  oadbAdminSecret: oadb-admin           # Name of DB Admin secret created separately
+  oadbWalletSecret: oadb-wallet         # Name of wallet secret created separately
+  oadbConnectionSecret: oadb-connection # Name of connection secret created separately
+  oosBucketSecret: oos-bucket           # Object storage bucket secret name (optional)
+
+ingress:
+  hosts: # Configure ingress to support host-specific routing
+    # - yourname.mushop.com 
+
+api:
+  env:
+    mediaUrl:                 # URL for catalogue image assets (https://objectstorage.[REGION].oraclecloud.com/n/[NAMESPACE]/b/[BUCKET_NAME]/o/)
+    newsletterSubscribeUrl:   # Newsletter subscription endpoint (https://[API_GATEWAY_URL]/newsletter/subscribe)
+
+storefront:
+  env:
+    odaEnabled:               # Enables the Oracle Digital Assistant as widget on the storefront
+    odaUri:                   # Oracle Digital Assistant URI to be used with MuShop
+    odaChannelId:             # Oracle Digital Assistant Channel Id to be used with MuShop
+    odaSecret:                # Oracle Digital Assistant Channel Secret. Used if client auth is enabled.
+    odaUserHiddenInitMessage: # Hidden Init Message if any. Makes the Digital Assistant proactive.
+
+carts:
+  secrets:
+    oadbAdminPassword:    # ADMIN password entered when provisioning ATP database
+    oadbWalletPassword:   # Wallet password entered when downloading ATP connection Wallet
+    oadbService:          # TNS Name displayed when the Wallet is downloaded an example would be `mushopdb_TP`
+    oadbUser:             # can be changed as long as oadbAdminPassword is available
+    oadbPassword:         # can be changed as long as oadbAdminPassword is available
+
+catalogue:
+  secrets:
+    oadbAdminPassword:    # ADMIN password entered when provisioning ATP database
+    oadbService:          # TNS Name displayed when the Wallet is downloaded an example would be `mushopdb_TP`
+    oadbUser:             # can be changed as long as oadbAdminPassword is available
+    oadbPassword:         # can be changed as long as oadbAdminPassword is available
+
+orders:
+  secrets:
+    oadbAdminPassword:    # ADMIN password entered when provisioning ATP database
+    oadbWalletPassword:   # Wallet password entered when downloading ATP connection Wallet
+    oadbService:          # TNS Name displayed when the Wallet is downloaded an example would be `mushopdb_TP`
+    oadbUser:             # can be changed as long as oadbAdminPassword is available
+    oadbPassword:         # can be changed as long as oadbAdminPassword is available
+
+user:
+  secrets:
+    oadbAdminPassword:    # ADMIN password entered when provisioning ATP database
+    oadbService:          # TNS Name displayed when the Wallet is downloaded an example would be `mushopdb_TP`
+    oadbUser:             # can be changed as long as oadbAdminPassword is available
+    oadbPassword:         # can be changed as long as oadbAdminPassword is available
+ 
+secrets:
+  streams:
+    streamId:             # Stream OCID
+    messageEndpoint:      # Stream messages endpoint URL 

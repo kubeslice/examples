@@ -1,0 +1,50 @@
+global:
+  mock:
+    service: "false"
+  oadbAdminSecret: oadb-admin           # Name of DB Admin secret
+  oadbWalletSecret: oadb-wallet         # Name of Wallet secret
+  oadbConnectionSecret: oadb-connection # Name of DB Connection secret
+
+ingress:
+  enabled: true
+
+api:
+  enabled: true
+
+assets:
+  enabled: true
+
+carts:
+  enabled: false
+
+catalogue:
+  enabled: false
+
+edge:
+  enabled: true
+
+events:
+  enabled: false
+
+orders:
+  enabled: false
+
+payment:
+  enabled: false
+
+session:
+  enabled: true
+  securityContext:
+    readOnlyRootFilesystem: false
+
+storefront:
+  enabled: true
+
+fulfillment:
+  enabled: false
+
+nats:
+  enabled: false
+
+user:
+  enabled: false

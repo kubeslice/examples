@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "orders.fullname" . }}
+  annotations:
+    avesha.io/slice: mu
+  labels: {{ include "orders.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      app.kubernetes.io/name: {{ include "orders.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        version: {{ .Values.image.tag | quote }}
+        app.kubernetes.io/name: {{ include "orders.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        mockmode: {{ .Values.global.mock.service | quote }}
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "80"
+    spec:
+      initContainers:
+        {{- include "orders.init.wallet" . | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 5
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+
+          env:
+            - name: ZIPKIN
+              value: {{ .Values.env.zipkin }}
+            - name: JAVA_OPTS
+              value: {{ .Values.env.javaOpts }}
+            - name: NATS_HOST
+              value: "{{ .Release.Name }}-{{ .Values.env.natsHost }}"
+            - name: NATS_PORT
+              value: "{{ .Values.env.natsPort }}"
+            - name: ORDERS_NEW
+              value: "{{ .Values.env.newOrdersSubject }}"
+            - name: ORDERS_SHIPPED
+              value: "{{ .Values.env.shippedOrdersSubject }}"
+            {{- include "orders.oadb.connection" . | nindent 12 }}
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-volume
+            {{- include "orders.mount.wallet" . | nindent 12 }}
+      volumes:
+        - name: tmp-volume
+          emptyDir:
+            medium: Memory
+        {{- include "orders.volumes" . | nindent 8 }}
+      nodeSelector:
+          kubernetes.io/os: linux
