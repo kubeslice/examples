@@ -2,6 +2,7 @@
 
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONFIG_DIR=${BASE_DIR}/config_files
+
 ENV_FILE=${BASE_DIR}/../kind.env
 
 if [[ ! -f $ENV_FILE ]]; then

@@ -1,0 +1,11 @@
+---
+- hosts: ec2
+  connection: local
+  become: true
+
+  roles:
+    - docker
+    - kind
+    - kubectl
+    - helm
+    - kubectx

@@ -1,0 +1,7 @@
+---
+
+- name: Download kind binary file
+  get_url:
+    url: https://kind.sigs.k8s.io/dl/v0.13.0/kind-linux-amd64
+    dest: /usr/local/bin/kind
+    mode: u=x,g=x,o=x

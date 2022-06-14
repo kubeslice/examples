@@ -1,0 +1,7 @@
+---
+
+- name: Download kubectl binary file
+  get_url:
+    url: https://dl.k8s.io/release/v1.24.0/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: u=x,g=x,o=x
