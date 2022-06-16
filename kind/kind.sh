@@ -266,6 +266,7 @@ for WORKER in ${WORKERS[@]}; do
     echo "Wait for kubeslice-system to be Running"
     sleep 60
     kubectl get pods -n kubeslice-system
+    kubectl create ns iperf
 done
 
 sleep 60
@@ -304,7 +305,6 @@ echo Setup Iperf
 kubectx $PREFIX${WORKERS[0]}
 kubectx
 
-kubectl create ns iperf
 kubectl apply -f iperf-sleep.yaml -n iperf
 echo "Wait for iperf to be Running"
 sleep 60
@@ -315,7 +315,6 @@ for WORKER in ${WORKERS[@]}; do
     if [[ $WORKER -ne ${WORKERS[0]} ]]; then 
         kubectx $PREFIX$WORKER
         kubectx
-        kubectl create ns iperf
         kubectl apply -f iperf-server.yaml -n iperf
         echo "Wait for iperf to be Running"
         sleep 60
