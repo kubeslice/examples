@@ -23,6 +23,9 @@ spec:
      - namespace: iperf
        clusters:
        - '*'
+     - namespace: bookinfo
+       clusters:
+       - '*'
     isolationEnabled: false                   #make this true in case you want to enable isolation
     allowedNamespaces:
      - namespace: kube-system
