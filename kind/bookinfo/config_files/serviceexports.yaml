@@ -1,7 +1,7 @@
 ##################################################################################
 # Details ServiceExport
 ##################################################################################
-apiVersion: networking.kubeslice.io/v1beta1
+apiVersion: mesh.avesha.io/v1beta1
 kind: ServiceExport
 metadata:
   name: details
@@ -10,7 +10,7 @@ spec:
   selector:
     matchLabels:
       app: details
-  ingressEnabled: false
+   ingressEnabled: false
   ports:
   - name: http
     containerPort: 9080
@@ -19,7 +19,7 @@ spec:
 ##################################################################################
 # Reviews ServiceExport
 ##################################################################################
-apiVersion: networking.kubeslice.io/v1beta1
+apiVersion: mesh.avesha.io/v1beta1
 kind: ServiceExport
 metadata:
   name: reviews
@@ -28,7 +28,7 @@ spec:
   selector:
     matchLabels:
       app: reviews
-  ingressEnabled: false
+   ingressEnabled: false
   ports:
   - name: http
     containerPort: 9080

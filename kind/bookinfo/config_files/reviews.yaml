@@ -26,8 +26,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v3
-  annotations:
-    avesha.io/slice: convoy
   labels:
     app: reviews
     version: v3
