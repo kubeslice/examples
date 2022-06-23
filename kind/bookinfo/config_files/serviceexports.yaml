@@ -6,7 +6,7 @@ kind: ServiceExport
 metadata:
   name: details
 spec:
-  slice: convoy  #Replace Slice Name
+  slice: bookinfo-slice  #Replace Slice Name
   selector:
     matchLabels:
       app: details
@@ -24,7 +24,7 @@ kind: ServiceExport
 metadata:
   name: reviews
 spec:
-  slice: convoy  #Replace Slice Name
+  slice: bookinfo-slice  #Replace Slice Name
   selector:
     matchLabels:
       app: reviews
