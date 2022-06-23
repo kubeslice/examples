@@ -36,4 +36,4 @@ bash tutorial.sh --help
 ```
 
 ## More Info
-A description of how to configure kind clusters from scratch is available at [Getting Started with Kind Clusters](https://docs.avesha.io/opensource/getting-started-with-kind-clusters)
+A description of how to configure kind clusters from scratch is available at [Getting Started with Kind Clusters](https://docs.avesha.io/documentation/open-source/0.2.0/getting-started-with-kind-clusters).
