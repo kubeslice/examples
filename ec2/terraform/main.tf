@@ -55,7 +55,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout bookinfo",
+      "git checkout new-slice",
       "chmod +x /tmp/examples/ec2/install_dependencies.sh",    
       "cd /tmp/examples/ec2; ./install_dependencies.sh",
       "sudo usermod -aG docker $USER",
@@ -67,20 +67,20 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout bookinfo",
+      "git checkout new-slice",
       "chmod +x /tmp/examples/kind/kind.sh",    
       "cd /tmp/examples/kind; ./kind.sh",
     ]
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "cd /tmp/examples",
-      "git checkout bookinfo",
-      "chmod +x /tmp/examples/kind/bookinfo/bookinfo.sh",    
-      "cd /tmp/examples/kind/bookinfo; ./bookinfo.sh",
-    ]
-  }
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "cd /tmp/examples",
+  #     "git checkout bookinfo",
+  #     "chmod +x /tmp/examples/kind/bookinfo/bookinfo.sh",    
+  #     "cd /tmp/examples/kind/bookinfo; ./bookinfo.sh",
+  #   ]
+  # }
 }
 
 resource "aws_security_group" "sgubuntu" {
@@ -115,6 +115,5 @@ output "ssh_connection" {
   value = <<-EOT
   ssh to the created instance with:
   ssh -i ssh_key/kubeslice-ec2.pem ubuntu@${aws_instance.ubuntu-ec2.public_dns} 
-  EOT
-  
+  EOT 
 }
