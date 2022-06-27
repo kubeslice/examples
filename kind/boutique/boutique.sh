@@ -87,5 +87,5 @@ kubectl apply -f ${CONFIG_DIR}/frontend.yaml -n $BOUTIQUE_NAMESPACE
 kubectl apply -f ${CONFIG_DIR}/loadgenerator.yaml -n $BOUTIQUE_NAMESPACE
 
 echo "Waiting for pods to run"
-sleep 90
+sleep 120
 kubectl port-forward deployment/frontend 8080:8080 -n boutique
