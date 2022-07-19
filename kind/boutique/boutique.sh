@@ -61,6 +61,24 @@ while getopts ":d:delete:help:" option; do
    esac
 done
 
+function wait_for_pods {
+  for pod in $(kubectl get pods -n $BOUTIQUE_NAMESPACE | grep -v NAME | awk '{ print $1 }'); do
+    counter=0
+
+    while [[ $(kubectl get pods $pod -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}' -n $BOUTIQUE_NAMESPACE) != True ]]; do
+      sleep 30
+      let counter=counter+30
+
+      if ((counter == 240)); then
+        echo "POD $pod failed to start in 240 seconds"
+        echo "Exiting"
+
+        exit -1
+      fi
+    done
+  done
+}
+
 echo "Creating boutique namespace in both clusters then creating the slice in the controller"
 kubectx $PRODUCT_CLUSTER
 kubectl create namespace $BOUTIQUE_NAMESPACE
@@ -70,6 +88,9 @@ kubectx $PREFIX$CONTROLLER
 kubectl apply -f water.yaml -n kubeslice-avesha
 echo "Waiting a few seconds for slice to be applied"
 sleep 10
+kubectx $PRODUCT_CLUSTER
+kubectl apply -f ${CONFIG_DIR}/frontend.yaml -n $BOUTIQUE_NAMESPACE
+kubectl apply -f ${CONFIG_DIR}/loadgenerator.yaml -n $BOUTIQUE_NAMESPACE
 kubectx $SERVICES_CLUSTER
 kubectl apply -f ${CONFIG_DIR}/paymentservice.yaml -n $BOUTIQUE_NAMESPACE
 kubectl apply -f ${CONFIG_DIR}/redis.yaml -n $BOUTIQUE_NAMESPACE
@@ -81,11 +102,7 @@ kubectl apply -f ${CONFIG_DIR}/recommendationservice.yaml -n $BOUTIQUE_NAMESPACE
 kubectl apply -f ${CONFIG_DIR}/currencyservice.yaml -n $BOUTIQUE_NAMESPACE
 kubectl apply -f ${CONFIG_DIR}/productcatalogservice.yaml -n $BOUTIQUE_NAMESPACE
 kubectl apply -f ${CONFIG_DIR}/shippingservice.yaml -n $BOUTIQUE_NAMESPACE
-
-kubectx $PRODUCT_CLUSTER
-kubectl apply -f ${CONFIG_DIR}/frontend.yaml -n $BOUTIQUE_NAMESPACE
-kubectl apply -f ${CONFIG_DIR}/loadgenerator.yaml -n $BOUTIQUE_NAMESPACE
-
 echo "Waiting for pods to run"
-sleep 120
+wait_for_pods
+kubectx $PRODUCT_CLUSTER
 kubectl port-forward deployment/frontend 8080:8080 -n boutique
