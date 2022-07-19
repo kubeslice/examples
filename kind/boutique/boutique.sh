@@ -66,8 +66,8 @@ function wait_for_pods {
     counter=0
 
     while [[ $(kubectl get pods $pod -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}' -n $BOUTIQUE_NAMESPACE) != True ]]; do
-      sleep 30
-      let counter=counter+30
+      sleep 20
+      let counter=counter+20
 
       if ((counter == 240)); then
         echo "POD $pod failed to start in 240 seconds"
