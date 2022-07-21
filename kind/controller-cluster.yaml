@@ -8,6 +8,9 @@ networking:
   # You may choose a specific port but probably don't need to in most cases.
   # Using a random port makes it easier to spin up multiple clusters.
   apiServerPort: 6443
+  # By default kind takes kindnet CNI but we are disabling this to use netpol feature
+  disableDefaultCNI: true # disable kindnet
+  podSubnet: 192.168.0.0/16 # set to Calico's default subnet
 nodes:
 - role: control-plane
   image: kindest/node:v1.20.15@sha256:393bb9096c6c4d723bb17bceb0896407d7db581532d11ea2839c80b28e5d8deb

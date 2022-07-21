@@ -19,41 +19,42 @@ CLEAN=false
 VERBOSE=false
 
 # First, check args
-VALID_ARGS=$(getopt -o chve: --long clean,help,verbose,env: -- "$@")
-if [[ $? -ne 0 ]]; then
-    exit 1;
-fi
-eval set -- "$VALID_ARGS"
-while [ : ]; do
-  case "$1" in
-    -e | --env)
-        echo "Passed environment file is: '$2'"
-	ENV=$2
-        shift 2
-        ;;
-    -c | --clean)
-        CLEAN=true
-        shift
-        ;;
-    -h | --help)
-	echo "Usage is:"
-	echo "    bash kind.sh [<options>]"
-	echo " "
-	echo "    -c | --clean: delete all clusters"
-	echo "    -e | --env <environment file>: Specify custom environment details"
-	echo "    -h | --help: Print this message"
-        shift
-	exit 0
-        ;;
-    -v | --verbose)
-        VERBOSE=true
-        shift
-        ;;
-    --) shift; 
-        break 
-        ;;
+while getopts "eenvccleanhhelpvverbose--" opt; do
+  case "$opt" in
+    e | env)
+      if [[ $2 == '' ]]; then
+          exit 1;
+      fi
+      echo "Passed environment file is: '$2'"
+    ENV=$2
+      shift 2
+      ;;
+    c | clean)
+      CLEAN=true
+      shift
+      ;;
+    h | help)
+      echo "Usage is:"
+      echo "    bash kind.sh [<options>]"
+      echo " "
+      echo "    -c | --clean: delete all clusters"
+      echo "    -e | --env <environment file>: Specify custom environment details"
+      echo "    -h | --help: Print this message"
+      shift
+      exit 0
+      ;;
+    v | verbose)
+      VERBOSE=true
+      ;;
+    --) shift;
+      break
+      ;;
   esac
 done
+
+if [[ ( $@ -ne '' )]]; then
+    exit 1;
+fi
 
 # Pull in the specified environemnt
 source $ENV
@@ -103,19 +104,12 @@ if [ $? -ne 0 ]; then
     echo Error: docker is required and was not found
     ERR=$((ERR+1))
 fi
-OS=`awk -F= '/^ID=/{print $2}' /etc/os-release`
-if [ "$OS" == "ubuntu" ]; then
-    INOT_USER_WAT=`sysctl fs.inotify.max_user_watches | awk '{ print $3 }'`
-    if [ $INOT_USER_WAT -lt 524288 ]; then
-	echo Warning: kind recommends at least 524288 fs.inotify.max_user_watches
-    fi
-    INOT_USER_INST=`sysctl fs.inotify.max_user_instances | awk '{ print $3 }'`
-    if [ $INOT_USER_INST -lt 512 ]; then
-	echo Warning: kind recommends at least 512 fs.inotify.max_user_instances
-    fi
-else
-    # Not Ubuntu... on yor own
-    echo Platform is $OS \(not Ubuntu\)... other checks skipped
+which colima > /dev/null
+if [ $? -ne 0 ]; then
+    echo Error: colima is required and was not found 
+    echo Run command colima start --cpu 4 --memory 8
+    echo To create VM with 4CPU, 8GiB memory and 10GiB storage
+    ERR=$((ERR+1))
 fi
 
 if [ $ERR -ne 0 ]; then
@@ -190,7 +184,7 @@ kubectl get ns
 kubectl get pods -n calico-system
 echo "Wait for Calico to be Running"
 namespace=calico-system
-sleep=900
+sleep=600
 wait_for_pods
 
 kubectl get pods -n calico-system
@@ -217,7 +211,7 @@ for WORKER in ${WORKERS[@]}; do
     namespace=calico-system
     sleep=900
     wait_for_pods
-
+    
     kubectl get pods -n calico-system
 
 done
@@ -258,7 +252,7 @@ echo Endpoint after base64 is: $DECODE_CONTROLLER_ENDPOINT
 # Make a controller values yaml from the controller template yaml
 CFILE=$CONTROLLER-config.yaml
 cp $CONTROLLER_TEMPLATE $CFILE
-sed -i "s/ENDPOINT/$CONTROLLER_ENDPOINT/g" $CFILE
+sed -i '' "s/ENDPOINT/$CONTROLLER_ENDPOINT/g" $CFILE
 
 echo "Install the kubeslice-controller"
 helm install kubeslice-controller kubeslice/kubeslice-controller -f controller-config.yaml --namespace kubeslice-controller --create-namespace $CONTROLLER_VERSION
@@ -288,7 +282,7 @@ REGFILE=clusters-registration.yaml
 echo "Register clusters"
 for WORKER in ${WORKERS[@]}; do
     cp $REGISTRATION_TEMPLATE $REGFILE
-    sed -i "s/WORKER/$WORKER/g" $REGFILE
+    sed -i '' "s/WORKER/$WORKER/g" $REGFILE
     kubectl apply -f clusters-registration.yaml -n kubeslice-avesha
 done
 
@@ -326,17 +320,17 @@ for WORKER in ${WORKERS[@]}; do
     # Convert the template info a .yaml for this worker
     WFILE=$WORKER.config.yaml
     cp $WORKER_TEMPLATE $WFILE
-    sed -i "s/NAMESPACE/$NAMESPACE/g" $WFILE
-    sed -i "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $WFILE
-    sed -i "s/CACRT/$CACRT/g" $WFILE
-    sed -i "s/TOKEN/$TOKEN/g" $WFILE
-    sed -i "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
+    sed -i '' "s/NAMESPACE/$NAMESPACE/g" $WFILE
+    sed -i '' "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $WFILE
+    sed -i '' "s/CACRT/$CACRT/g" $WFILE
+    sed -i '' "s/TOKEN/$TOKEN/g" $WFILE
+    sed -i '' "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
 
 
     # Switch to worker context
     kubectx $PREFIX$WORKER
     WORKERNODEIP=`kubectl get nodes -o wide | grep $WORKER-worker | head -1 | awk '{ print $6 }'`
-    sed -i "s/NODEIP/$WORKERNODEIP/g" $WFILE
+    sed -i '' "s/NODEIP/$WORKERNODEIP/g" $WFILE
     helm install kubeslice-worker kubeslice/kubeslice-worker -f $WFILE --namespace kubeslice-system  --create-namespace $WORKER_VERSION
     echo Check for status...
     kubectl get pods -n kubeslice-system
@@ -350,7 +344,7 @@ for WORKER in ${WORKERS[@]}; do
     kubectl create ns iperf
 done
 
-sleep 60
+sleep 120
 echo Switch to controller context and configure slices...
 kubectx $PREFIX$CONTROLLER
 kubectx
@@ -360,10 +354,14 @@ kubectx
 SFILE=slice.yaml
 cp $SLICE_TEMPLATE $SFILE
 for WORKER in ${WORKERS[@]}; do
-    sed -i "s/- WORKER/- $WORKER/g" $SFILE
-    sed -i "/- $WORKER/ a \ \ \ \ - WORKER" $SFILE
+    sed -i '' "s/- WORKER/- $WORKER/g" $SFILE
+    sed -i '' '14i\
+\
+' $SFILE
+    sed -i '' '14i\             
+    - WORKER' $SFILE
 done
-sed -i '/- WORKER/d' $SFILE
+sed -i '' '/- WORKER/d' $SFILE
 
 echo kubectl apply -f $SFILE -n kubeslice-avesha
 kubectl apply -f $SFILE -n kubeslice-avesha
@@ -391,7 +389,7 @@ kubectx
 kubectl apply -f iperf-sleep.yaml -n iperf
 echo "Wait for iperf to be Running"
 namespace=iperf
-sleep=120
+sleep=300
 wait_for_pods
 kubectl get pods -n iperf
 
@@ -403,7 +401,7 @@ for WORKER in ${WORKERS[@]}; do
         kubectl apply -f iperf-server.yaml -n iperf
         echo "Wait for iperf to be Running"
         namespace=iperf
-        sleep=120
+        sleep=300
         wait_for_pods
         kubectl get pods -n iperf
     fi
@@ -413,7 +411,7 @@ done
 kubectx $PREFIX${WORKERS[0]}
 kubectx
 
-sleep 90
+sleep 120
 # Check Iperf connectity from iperf sleep to iperf server
 IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
 
