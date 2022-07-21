@@ -26,8 +26,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: details-v1
-  annotations:
-    avesha.io/slice: convoy
   labels:
     app: details
     version: v1

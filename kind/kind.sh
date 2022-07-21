@@ -267,6 +267,7 @@ for WORKER in ${WORKERS[@]}; do
     sleep 60
     kubectl get pods -n kubeslice-system
     kubectl create ns iperf
+    kubectl create ns bookinfo
 done
 
 sleep 60
