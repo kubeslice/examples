@@ -17,7 +17,7 @@
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONFIG_DIR=${BASE_DIR}/config
 
-ENV=kind.env
+# ENV=kind.env
 CLEAN=false
 VERBOSE=false
 BINARY_NAME="slicectl"
@@ -29,7 +29,7 @@ cleanup() {
 }
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  VALID_ARGS=$(getopt -o chvef: --long clean,help,verbose,env,file: -- "$@")
+  VALID_ARGS=$(getopt -o chvf: --long clean,help,verbose,file: -- "$@")
   if [[ $? -ne 0 ]]; then
       exit 1;
   fi
@@ -38,11 +38,11 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 #   BINARY_NAME="slicectl-darwin-amd64"
   while [ : ]; do
     case "$1" in
-      -e | --env)
-          echo "Passed environment file is: '$2'"
-  	    ENV=$2
-          shift 2
-          ;;
+    #   -e | --env)
+    #       echo "Passed environment file is: '$2'"
+  	#     ENV=$2
+    #       shift 2
+    #       ;;
       -c | --clean)
           CLEAN=true
           shift
@@ -56,8 +56,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   	echo "    bash kind.sh [<options>]"
   	echo " "
   	echo "    -c | --clean: delete all clusters"
-  	echo "    -e | --env <environment file>: Specify custom environment details"
-      echo "    -f | --file <path_to_file> : [Optional] Path to topology file. See https://github.com/kubeslice/slicectl/blob/master/samples/template.yaml and https://github.com/kubeslice/slicectl/blob/master/samples/kind-demo.yaml"
+  	# echo "    -e | --env <environment file>: Specify custom environment details"
+    echo "    -f | --file <path_to_file> : [Optional] Path to topology file. See https://github.com/kubeslice/slicectl/blob/master/samples/template.yaml and https://github.com/kubeslice/slicectl/blob/master/samples/kind-demo.yaml"
   	echo "    -h | --help: Print this message"
           shift
   	exit 0
@@ -95,7 +95,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   	echo "    bash kind.sh [<options>]"
   	echo " "
   	echo "    -c | --clean: delete all clusters"
-  	echo "    -e | --env <environment file>: Specify custom environment details"
+  	# echo "    -e | --env <environment file>: Specify custom environment details"
     echo "    -f | --file <path_to_file> : [Optional] Path to topology file. See https://github.com/kubeslice/slicectl/blob/master/samples/template.yaml and https://github.com/kubeslice/slicectl/blob/master/samples/kind-demo.yaml"
   	echo "    -h | --help: Print this message"
     shift
@@ -111,7 +111,7 @@ else
 fi
 
 # Pull in the specified environemnt
-source $ENV
+# source $ENV
 
 # Check for requirements
 echo "Checking for required tools..."
