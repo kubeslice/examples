@@ -1,4 +1,8 @@
 ## Base64 encoded secret values from controller cluster
+gateway:
+  image: docker.io/aveshadev/gw-sidecar 
+  tag: 0.1.3
+  pullPolicy: IfNotPresent
 controllerSecret:
   namespace: NAMESPACE
   endpoint: ENDPOINT
