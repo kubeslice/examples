@@ -14,6 +14,9 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CONFIG_DIR=${BASE_DIR}/config
+
 ENV=kind.env
 CLEAN=false
 VERBOSE=false
@@ -120,12 +123,14 @@ fi
 
 if [ -z "$TOPOLOGY_FILE" ]; then
   echo "Config file $TOPOLOGY_FILE not found"
-  echo "Running ${BINARY_NAME} without topology file"
-  echo "Trying to run binary file $BINARY_NAME"
-  $(${BINARY_NAME} --profile=full-demo install)
+  echo "Running ${BINARY_NAME} using default topology file"
+
+  TOPOLOGY_FILE=${CONFIG_DIR}/kind-demo.yaml
+  
+  [[ -f "$TOPOLOGY_FILE" ]] && $(${BINARY_NAME} --config=$TOPOLOGY_FILE install)
 else
   echo "Running ${BINARY_NAME} with topology file $TOPOLOGY_FILE"
-  echo "Trying to run binary file $BINARY_NAME"
+  
   $(${BINARY_NAME} --config=$TOPOLOGY_FILE install)
 fi
 

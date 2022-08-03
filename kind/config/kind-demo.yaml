@@ -1,0 +1,19 @@
+configuration:
+  cluster_configuration:
+    profile: full-demo
+    controller:
+      name: controller
+    workers:
+    - name: worker1
+    - name: worker2
+  kubeslice_configuration:
+    project_name: demo
+  helm_chart_configuration:
+    repo_alias: kubeslice-demo
+    repo_url: https://kubeslice.github.io/charts/
+    cert_manager_chart:
+      chart_name: cert-manager
+    controller_chart:
+      chart_name: kubeslice-controller
+    worker_chart:
+      chart_name: kubeslice-worker
