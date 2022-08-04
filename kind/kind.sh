@@ -23,9 +23,12 @@ VERBOSE=false
 BINARY_NAME="slicectl"
 TOPOLOGY_FILE=""
 
+source ~/.bash_profile
+
 cleanup() {
 #   $(${BINARY_NAME} uninstall)
-  slicectl uninstall
+  [[ -z "$1" ]] && slicectl --config=$1 uninstall; exit 0
+  # slicectl uninstall
 }
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -44,7 +47,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     #       shift 2
     #       ;;
       -c | --clean)
-          CLEAN=true
+          cleanup $TOPOLOGY_FILE
           shift
           ;;
       -f | --file)
@@ -127,11 +130,11 @@ if [ -z "$TOPOLOGY_FILE" ]; then
 
   TOPOLOGY_FILE=${CONFIG_DIR}/kind-demo.yaml
   
-  [[ -f "$TOPOLOGY_FILE" ]] && $(${BINARY_NAME} --config=$TOPOLOGY_FILE install)
+  [[ -f "$TOPOLOGY_FILE" ]] && ${BINARY_NAME} --config=$TOPOLOGY_FILE install
 else
   echo "Running ${BINARY_NAME} with topology file $TOPOLOGY_FILE"
   
-  $(${BINARY_NAME} --config=$TOPOLOGY_FILE install)
+  ${BINARY_NAME} --config=$TOPOLOGY_FILE install
 fi
 
 echo "Done"
