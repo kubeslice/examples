@@ -1,6 +1,6 @@
 configuration:
   cluster_configuration:
-    profile: full-demo
+    profile: minimal-demo
     controller:
       name: controller
     workers:

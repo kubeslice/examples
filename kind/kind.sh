@@ -22,12 +22,15 @@ CLEAN=false
 VERBOSE=false
 BINARY_NAME="slicectl"
 TOPOLOGY_FILE=""
+PATH_CONFIG_FILE=/tmp/kind-
 
 source ~/.bash_profile
 
 cleanup() {
 #   $(${BINARY_NAME} uninstall)
   [[ -z "$1" ]] && slicectl --config=$1 uninstall; exit 0
+
+  slicectl --config=${PWD}/config/kind-demo.sh uninstall
   # slicectl uninstall
 }
 
@@ -52,6 +55,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
           ;;
       -f | --file)
           TOPOLOGY_FILE="$OPTARG"
+          echo $TOPOLOGY_FILE > /tmp/kind-config-file
           shift 2
           ;;
       -h | --help)
@@ -92,7 +96,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   while true; do
     case $1 in
       -c ) cleanup ; exit 0 ;;
-      -f ) TOPOLOGY_FILE="$2" ; shift 2 ;;
+      -f ) TOPOLOGY_FILE="$2" ; echo $TOPOLOGY_FILE > /tmp/kind-config-file; shift 2 ;;
       -h )
   	echo "Usage is:"
   	echo "    bash kind.sh [<options>]"

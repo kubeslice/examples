@@ -1,6 +1,0 @@
-kubeslice:
-  controller:
-    loglevel: Debug
-    rbacResourcePrefix: kubeslice-rbac
-    projectnsPrefix: kubeslice
-    endpoint: https://ENDPOINT

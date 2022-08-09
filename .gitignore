@@ -5,3 +5,4 @@ kind/slice.yaml
 kind/worker-*.config.yaml
 *~
 ec2/ssh_key
+kubeslice/
