@@ -78,6 +78,12 @@ clean() {
 # Check for requirements
 echo Checking for required tools...
 ERR=0
+which ansible > /dev/null
+if [ $? -ne 0 ]; then 
+    echo Error: Ansible is required and was not found
+    echo Downloading....
+    sudo apt install -y ansible
+fi 
 which kind > /dev/null
 if [ $? -ne 0 ]; then
     echo Error: kind is required and was not found
@@ -120,7 +126,13 @@ fi
 
 if [ $ERR -ne 0 ]; then
     echo Exiting due to missing required tools
-    exit 0        # Done until all requirements are met
+    read -p "Do you want to proceed with downloading the prerequisite?(yes/no) " yn
+    case $yn in
+        yes ) ansible-playbook -i ./../ansible/hosts ./../ansible/main.yaml;;
+        no ) exit 0;;
+        * ) echo invalid response;
+		    exit 1 ;;
+    esac
 else
     echo Requirement checking passed
 fi
