@@ -43,4 +43,16 @@
             - docker-compose-plugin
           state: latest
           update_cache: true
+
+      - name: Add docker group
+        ansible.builtin.group:
+          name: docker
+          state: present
+              
+      - name: Add user to the docker group
+        ansible.builtin.user:
+          name: '{{ ansible_env.USER }}'
+          group: docker
+          append: yes
+
     when: "'docker' not in ansible_facts.packages"
