@@ -25,8 +25,25 @@ PRODUCT_NODE=$(kubectl get pods -o wide -n bookinfo | tail -1 | awk '{ print $7 
 
 echo "#### Collecting bookinfo data"
 BI_PORT=$(kubectl get services -n bookinfo | egrep 'productpage' | grep -o -P '(?<=:).*(?=/TCP)')
+echo $BI_PORT
 
 BI_ADDR_STR=$(kubectl get nodes -o wide | egrep "$PRODUCT_NODE" | awk '{ print $6 }')
+
+WSL=$(ps -elf | egrep "wsl\/docker-desktop" | egrep -v grep | awk '{ print $15 }')
+
+echo $WSL
+if [[ $WSL != "" ]]
+then
+    echo "#### Bookinfo Reviews Page WSL"
+    echo -e "Started forwarding the port to access the ProductPage UI"
+    echo -e "Please use the CTRL-C command to exit & stop the port forwarding"
+    echo -e "Please use the below command to access the Productpage manually"
+    echo -e "kubectl port-forward svc/productpage -n bookinfo $BI_PORT:9080"
+    echo -e "\n\nAccess productpage on browser with the URL  http://localhost:$BI_PORT/productpage"
+
+    kubectl port-forward svc/productpage -n bookinfo $BI_PORT:9080
+    exit
+fi
 
 echo "#### Checking BookInfo..."
 echo curl http://$BI_ADDR_STR":"$BI_PORT/productpage
