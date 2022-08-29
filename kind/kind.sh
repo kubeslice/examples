@@ -125,16 +125,23 @@ else
 fi
 
 if [ $ERR -ne 0 ]; then
-    echo Exiting due to missing required tools
-    read -p "Do you want to proceed with downloading the prerequisite?(yes/no) " yn
+    read -p "Do you want to proceed with downloading the prerequisite?(Y/n) " yn
     case $yn in
-        yes ) ansible-playbook -i ./../ansible/hosts ./../ansible/main.yaml;;
-        no ) exit 0;;
+        [Yy] ) ansible-playbook -i ./../ansible/hosts ./../ansible/main.yaml;;
+        [Nn] ) echo Exiting due to missing required tools; 
+            exit 0;;
         * ) echo invalid response;
 		    exit 1 ;;
     esac
 else
     echo Requirement checking passed
+fi
+
+if id -nGz "$USER" | grep -qzxF "docker"; then 
+    echo User $USER belongs to group docker
+else 
+    echo User $USER doesnot belong to group "docker"
+    exit 0
 fi
 
 # See if we're being asked to cleanup
