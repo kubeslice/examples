@@ -1,0 +1,22 @@
+configuration:
+  cluster_configuration:
+    kube_config_path: <KUBECONFIG_PATH>
+    controller:
+      name: controller
+      context_name: kind-controller
+    workers:
+      - name: worker-1
+        context_name: kind-worker-1
+      - name: worker-2
+        context_name: kind-worker-2      
+  kubeslice_configuration:
+    project_name: preprod
+  helm_chart_configuration:
+    repo_alias: kubeslice
+    repo_url: https://kubeslice.github.io/charts/
+    cert_manager_chart:
+      chart_name: cert-manager
+    controller_chart:
+      chart_name: kubeslice-controller
+    worker_chart:
+      chart_name: kubeslice-worker
