@@ -223,47 +223,48 @@ sed -i "s#<KUBECONFIG_PATH>#${BASE_DIR}/config/kubeconfig#g" ${BASE_DIR}/config/
 
 $KUBESLICE_CLI --config ${BASE_DIR}/config/topology.yaml install
 
-# # Iperf setup
-# echo Setup Iperf
-# # Switch to kind-worker-1 context
-# kubectx $PREFIX${WORKERS[0]}
-# kubectx
+# Iperf setup
+echo Setup Iperf
+# Switch to kind-worker-1 context
+kubectx $PREFIX${WORKERS[0]}
+kubectx
 
-# kubectl apply -f iperf-sleep.yaml -n iperf
-# echo "Wait for iperf to be Running"
-# sleep 60
-# kubectl get pods -n iperf
+kubectl create namespace iperf
+kubectl apply -f iperf-sleep.yaml -n iperf
+echo "Wait for iperf to be Running"
+sleep 60
+kubectl get pods -n iperf
 
-# # Switch to kind-worker-2 context
-# for WORKER in ${WORKERS[@]}; do
-#     if [[ $WORKER -ne ${WORKERS[0]} ]]; then 
-#         kubectx $PREFIX$WORKER
-#         kubectx
-#         kubectl apply -f iperf-server.yaml -n iperf
-#         echo "Wait for iperf to be Running"
-#         sleep 60
-#         kubectl get pods -n iperf
-#     fi
-# done
+# Switch to kind-worker-2 context
+for WORKER in ${WORKERS[@]}; do
+    if [[ $WORKER -ne ${WORKERS[0]} ]]; then 
+        kubectx $PREFIX$WORKER
+        kubectx
 
-# # Switch to worker context
-# kubectx $PREFIX${WORKERS[0]}
-# kubectx
+        kubectl create namespace iperf
+        kubectl apply -f iperf-server.yaml -n iperf
+        echo "Wait for iperf to be Running"
+        sleep 60
+        kubectl get pods -n iperf
+    fi
+done
 
-# sleep 90
-# # Check Iperf connectity from iperf sleep to iperf server
-# IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
+# Switch to worker context
+kubectx $PREFIX${WORKERS[0]}
+kubectx
 
-# kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
-# if [ $? -ne 0 ]; then
-#     echo '***Error: Connectivity between clusters not succesful!'
-#     ERR=$((ERR+1))
-# fi
+sleep 90
+# Check Iperf connectity from iperf sleep to iperf server
+IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
 
-# # set KUBECONFIG to previous value
-# export KUBECONFIG="${OLD_KUBECONFIG}"
+kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
+if [ $? -ne 0 ]; then
+    echo '***Error: Connectivity between clusters not succesful!'
+    ERR=$((ERR+1))
+fi
 
-# # Return status
-# exit $ERR
+# set KUBECONFIG to previous value
+export KUBECONFIG="${OLD_KUBECONFIG}"
 
-exit 0
+# Return status
+exit $ERR
