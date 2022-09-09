@@ -2,7 +2,10 @@
 - hosts: ec2
   connection: local
   become: true
-
+  pre_tasks:
+    - name: "Check the preresquite"
+      package_facts:
+        manager: "auto"
   roles:
     - docker
     - kind

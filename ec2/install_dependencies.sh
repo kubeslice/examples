@@ -18,7 +18,7 @@ fi
 
 PATH=$PATH:$(python3 -c "import site; print(site.USER_BASE)")/bin
 
-ansible-playbook -i ./ansible/hosts ansible/main.yaml
+ansible-playbook -i ./../ansible/hosts ./../ansible/main.yaml
 
 echo "Dependencies installed"
 
