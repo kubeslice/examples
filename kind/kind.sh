@@ -140,8 +140,11 @@ fi
 if id -nGz "$USER" | grep -qzxF "docker"; then 
     echo User $USER belongs to group docker
 else 
-    echo User $USER doesnot belong to group "docker"
-    exit 0
+    # echo User $USER doesnot belong to group "docker"
+    # exit 0
+
+    sudo usermod -aG docker $USER
+    newgrp docker 
 fi
 
 # See if we're being asked to cleanup
