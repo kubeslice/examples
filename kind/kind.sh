@@ -15,7 +15,7 @@
 #	limitations under the License.
 
 BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-KUBESLICE_CLI="slicectl"
+KUBESLICE_CLI="kubeslice-cli"
 
 ENV=kind.env
 CLEAN=false
@@ -193,14 +193,16 @@ fi
 
 if [ ! $(command -v $KUBESLICE_CLI &> /dev/null) ]; then
   echo "$KUBESLICE_CLI not found. Trying to download latest version"
+
+  RELEASE_BASE_URL="https://github.com/kubeslice/kubeslice-cli/releases/download/0.3.0"
   
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    CLI_URL="https://github.com/kubeslice/slicectl/releases/download/0.2.0-rc4-topology/slicectl-linux-amd64"
+    CLI_URL="${RELEASE_BASE_URL}/kubeslice-cli-linux-amd64"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     if [[ $(uname -m) == 'arm64' ]]; then
-      CLI_URL="https://github.com/kubeslice/slicectl/releases/download/0.2.0-rc4-topology/slicectl-darwin-arm64"
+      CLI_URL="${RELEASE_BASE_URL}/kubeslice-cli-darwin-arm64"
     elif [[ $(uname -m) == 'x86_64' ]]; then
-      CLI_URL="https://github.com/kubeslice/slicectl/releases/download/0.2.0-rc4-topology/slicectl-darwin-amd64"
+      CLI_URL="${RELEASE_BASE_URL}/kubeslice-cli-darwin-amd64"
     fi
   fi
 
