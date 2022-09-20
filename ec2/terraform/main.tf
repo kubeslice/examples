@@ -55,7 +55,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout ec2",
+      "git checkout bookinfo",
       "chmod +x /tmp/examples/ec2/install_dependencies.sh",    
       "cd /tmp/examples/ec2; ./install_dependencies.sh",
       "sudo usermod -aG docker $USER",
@@ -67,7 +67,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout ec2",
+      "git checkout bookinfo",
       "chmod +x /tmp/examples/kind/kind.sh",    
       "cd /tmp/examples/kind; ./kind.sh",
     ]
@@ -76,7 +76,7 @@ resource "aws_instance" "ubuntu-ec2" {
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/examples",
-      "git checkout ec2",
+      "git checkout bookinfo",
       "chmod +x /tmp/examples/kind/bookinfo/bookinfo.sh",    
       "cd /tmp/examples/kind/bookinfo; ./bookinfo.sh",
     ]
