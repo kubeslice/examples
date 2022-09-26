@@ -225,13 +225,106 @@ sed -i "s#<KUBECONFIG_PATH>#${BASE_DIR}/config/kubeconfig#g" ${BASE_DIR}/config/
 
 $KUBESLICE_CLI --config ${BASE_DIR}/config/topology.yaml install
 
+### Slice configuration
+export KUBECONFIG=${PWD}/config/kubeconfig
+export PROJECT_NAMESPACE=kubeslice-preprod
+
+echo kubectl get clusters -n ${PROJECT_NAMESPACE}
+kubectx $PREFIX$CONTROLLER
+kubectl get clusters -n kubeslice-preprod
+
+# Worker setup
+# Get secret info from controller...
+ for WORKER in ${WORKERS[@]}; do
+
+     kubectx $PREFIX$CONTROLLER
+
+     SECRET=`kubectl get secrets -n ${PROJECT_NAMESPACE}| grep $WORKER | awk '{print $1}'`
+     echo Secret for worker $WORKER is: $SECRET
+
+     # Don't use endpoint from the secrets file... use the one we created above
+     echo "Readable ENDPOINT is: " $DECODE_CONTROLLER_ENDPOINT
+
+     NAMESPACE=`kubectl get secrets $SECRET -o yaml -n ${PROJECT_NAMESPACE} | grep -m 1 " namespace" | awk '{print $2}'`
+     NAMESPACE=`echo -n $NAMESPACE`
+     CACRT=`kubectl get secrets $SECRET -o yaml -n ${PROJECT_NAMESPACE} | grep -m 1 " ca.crt" | awk '{print $2}'`
+     CACRT=`echo -n $CACRT`
+     TOKEN=`kubectl get secrets $SECRET -o yaml -n ${PROJECT_NAMESPACE} | grep -m 1 " token" | awk '{print $2}'`
+     TOKEN=`echo -n $TOKEN`
+     CLUSTERNAME=`echo -n $WORKER`
+
+     if [ "$VERBOSE" == true ]; then
+        echo Namespace $NAMESPACE
+        echo Endpoint $ENDPOINT
+        echo Ca.crt $CACRT
+        echo Token $TOKEN
+        echo ClusterName $CLUSTERNAME
+     fi
+
+     # Convert the template info a .yaml for this worker
+     WFILE=$WORKER.config.yaml
+     cp $WORKER_TEMPLATE $WFILE
+     sed -i "s/NAMESPACE/$NAMESPACE/g" $WFILE
+     sed -i "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $WFILE
+     sed -i "s/CACRT/$CACRT/g" $WFILE
+     sed -i "s/TOKEN/$TOKEN/g" $WFILE
+     sed -i "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
+
+     # Switch to worker context
+     kubectx $PREFIX$WORKER
+     WORKERNODEIP=`kubectl get nodes -o wide | grep $WORKER-worker | head -1 | awk '{ print $6 }'`
+     sed -i "s/NODEIP/$WORKERNODEIP/g" $WFILE
+     helm install kubeslice-worker kubeslice/kubeslice-worker -f $WFILE --namespace kubeslice-system  --create-namespace $WORKER_VERSION
+     echo Check for status...
+     kubectl get pods -n kubeslice-system
+     echo "Wait for kubeslice-system to be Running"
+     sleep 60
+     kubectl get pods -n kubeslice-system
+     kubectl create ns iperf
+     kubectl create ns bookinfo
+ done
+
+sleep 60
+
+export KUBECONFIG=${PWD}/config/kubeconfig
+
+echo Switch to controller context and configure slices...
+kubectx $PREFIX$CONTROLLER
+kubectx
+
+# Slice setup
+# Make a slice.yaml from the slice.template.yaml
+SFILE=slice.yaml
+cp $SLICE_TEMPLATE $SFILE
+for WORKER in ${WORKERS[@]}; do
+    sed -i "s/- WORKER/- $WORKER/g" $SFILE
+    sed -i "/- $WORKER/ a \ \ \ \ - WORKER" $SFILE
+done
+sed -i '/- WORKER/d' $SFILE
+
+PROJECT_NAMESPACE=kubeslice-preprod
+
+echo kubectl apply -f $SFILE -n $PROJECT_NAMESPACE
+kubectl apply -f $SFILE -n $PROJECT_NAMESPACE
+
+echo "Wait for vl3(slice) and gateway pod to be Running in worker clusters"
+sleep 120
+
+echo "Final status check..."
+for WORKER in ${WORKERS[@]}; do
+    echo $PREFIX$WORKER
+    kubectx $PREFIX$WORKER
+    kubectx
+    kubectl get pods -n kubeslice-system
+done
+
 # Iperf setup
 echo Setup Iperf
 # Switch to kind-worker-1 context
 kubectx $PREFIX${WORKERS[0]}
 kubectx
-
 kubectl create namespace iperf
+
 kubectl apply -f iperf-sleep.yaml -n iperf
 echo "Wait for iperf to be Running"
 sleep 60
@@ -239,16 +332,15 @@ kubectl get pods -n iperf
 
 # Switch to kind-worker-2 context
 for WORKER in ${WORKERS[@]}; do
-    if [[ $WORKER -ne ${WORKERS[0]} ]]; then 
-        kubectx $PREFIX$WORKER
-        kubectx
-
-        kubectl create namespace iperf
-        kubectl apply -f iperf-server.yaml -n iperf
-        echo "Wait for iperf to be Running"
-        sleep 60
-        kubectl get pods -n iperf
-    fi
+  if [[ $WORKER -ne ${WORKERS[0]} ]]; then
+    kubectx $PREFIX$WORKER
+    kubectx
+    kubectl create namespace iperf
+    kubectl apply -f iperf-server.yaml -n iperf
+    echo "Wait for iperf to be Running"
+    sleep 60
+    kubectl get pods -n iperf
+  fi
 done
 
 # Switch to worker context
@@ -261,8 +353,8 @@ IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 
 
 kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
 if [ $? -ne 0 ]; then
-    echo '***Error: Connectivity between clusters not succesful!'
-    ERR=$((ERR+1))
+  echo '***Error: Connectivity between clusters not succesful!'
+  ERR=$((ERR+1))
 fi
 
 # set KUBECONFIG to previous value
