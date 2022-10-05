@@ -20,9 +20,11 @@ KUBESLICE_CLI="kubeslice-cli"
 ENV=kind.env
 CLEAN=false
 VERBOSE=false
+CLI_CFG=${BASE_DIR}/config/topology.yaml
+CLI_CFG_PASSED=false
 
 # First, check args
-VALID_ARGS=$(getopt -o chve: --long clean,help,verbose,env: -- "$@")
+VALID_ARGS=$(getopt -o chvek: --long clean,help,verbose,env,config: -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -51,6 +53,11 @@ while [ : ]; do
     -v | --verbose)
         VERBOSE=true
         shift
+        ;;
+    -k | --config)
+        CLI_CFG=$2
+	CLI_CFG_PASSED=true
+        shift 2
         ;;
     --) shift; 
         break 
@@ -100,6 +107,12 @@ calico() {
     done
   done
 }
+
+# See if we're being asked to be chatty
+if [ "$VERBOSE" == true ]; then
+    # Log all the commands (w/o having to echo them)
+    set -o xtrace
+fi
 
 # Check for requirements
 echo Checking for required tools...
@@ -166,32 +179,13 @@ fi
 
 export KUBECONFIG=${BASE_DIR}/config/kubeconfig
 
-echo Create the Controller cluster
-echo kind create cluster --name $CONTROLLER --config controller-cluster.yaml $KIND_K8S_VERSION
-kind create cluster --name $CONTROLLER --config controller-cluster.yaml $KIND_K8S_VERSION
+command -v $KUBESLICE_CLI
+if ! $(command -v $KUBESLICE_CLI &> /dev/null) ; then
+  echo "$KUBESLICE_CLI not found. Trying to download latest version"
 
-echo "Installing calico for cluster $CONTROLLER"
-calico
-
-echo Create the Worker clusters
-for CLUSTER in ${WORKERS[@]}; do
-    echo Creating cluster $CLUSTER    
-    echo kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
-    kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
-    # Make sure the cluster context exists
-    kubectl cluster-info --context $PREFIX$CLUSTER
-
-    echo "Installing calico for cluster $CLUSTER"
-    calico
-done
-
-# See if we're being asked to be chatty
-if [ "$VERBOSE" == true ]; then
-    # Log all the commands (w/o having to echo them)
-    set -o xtrace
 fi
 
-if [ ! $(command -v $KUBESLICE_CLI &> /dev/null) ]; then
+if ! $(command -v $KUBESLICE_CLI &> /dev/null) ; then
   echo "$KUBESLICE_CLI not found. Trying to download latest version"
 
   RELEASE_BASE_URL="https://github.com/kubeslice/kubeslice-cli/releases/download/0.3.0"
@@ -221,136 +215,129 @@ if [ ! $(command -v $KUBESLICE_CLI &> /dev/null) ]; then
   KUBESLICE_CLI=${BASE_DIR}/bin/$KUBESLICE_CLI
 fi
 
-sed -i "s#<KUBECONFIG_PATH>#${BASE_DIR}/config/kubeconfig#g" ${BASE_DIR}/config/topology.yaml 
+if [ "$CLI_CFG_PASSED" == false ]; then
+    # Modify and use the default template topology file
+    sed "s#<KUBECONFIG_PATH>#${BASE_DIR}/config/kubeconfig#g" ${BASE_DIR}/config/topology.yaml > ${PWD}/config/topology.tmp.yaml
+    CLI_CFG=${PWD}/config/topology.tmp.yaml
+fi
 
-$KUBESLICE_CLI --config ${BASE_DIR}/config/topology.yaml install
+# Now CLI_CFG points at the correct file
 
-### Slice configuration
-export KUBECONFIG=${PWD}/config/kubeconfig
-export PROJECT_NAMESPACE=kubeslice-preprod
+cat $CLI_CFG
+PROJECT_NAME=`grep project_name: $CLI_CFG | awk '{ print $2 }'`
 
-echo kubectl get clusters -n ${PROJECT_NAMESPACE}
-kubectx $PREFIX$CONTROLLER
-kubectl get clusters -n kubeslice-preprod
+######################################################################
+# Create the kind clusters here
+######################################################################
 
-# Worker setup
-# Get secret info from controller...
- for WORKER in ${WORKERS[@]}; do
+echo Create the Controller cluster
+kind create cluster --name $CONTROLLER --config controller-cluster.yaml $KIND_K8S_VERSION
 
-     kubectx $PREFIX$CONTROLLER
+echo "Installing calico for cluster $CONTROLLER"
+calico
 
-     SECRET=`kubectl get secrets -n ${PROJECT_NAMESPACE}| grep $WORKER | awk '{print $1}'`
-     echo Secret for worker $WORKER is: $SECRET
+echo Create the Worker clusters
+for CLUSTER in ${WORKERS[@]}; do
+    echo Creating cluster $CLUSTER    
+    echo kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
+    kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
+    # Make sure the cluster context exists
+    kubectl cluster-info --context $PREFIX$CLUSTER
 
-     # Don't use endpoint from the secrets file... use the one we created above
-     echo "Readable ENDPOINT is: " $DECODE_CONTROLLER_ENDPOINT
-
-     NAMESPACE=`kubectl get secrets $SECRET -o yaml -n ${PROJECT_NAMESPACE} | grep -m 1 " namespace" | awk '{print $2}'`
-     NAMESPACE=`echo -n $NAMESPACE`
-     CACRT=`kubectl get secrets $SECRET -o yaml -n ${PROJECT_NAMESPACE} | grep -m 1 " ca.crt" | awk '{print $2}'`
-     CACRT=`echo -n $CACRT`
-     TOKEN=`kubectl get secrets $SECRET -o yaml -n ${PROJECT_NAMESPACE} | grep -m 1 " token" | awk '{print $2}'`
-     TOKEN=`echo -n $TOKEN`
-     CLUSTERNAME=`echo -n $WORKER`
-
-     if [ "$VERBOSE" == true ]; then
-        echo Namespace $NAMESPACE
-        echo Endpoint $ENDPOINT
-        echo Ca.crt $CACRT
-        echo Token $TOKEN
-        echo ClusterName $CLUSTERNAME
-     fi
-
-     # Convert the template info a .yaml for this worker
-     WFILE=$WORKER.config.yaml
-     cp $WORKER_TEMPLATE $WFILE
-     sed -i "s/NAMESPACE/$NAMESPACE/g" $WFILE
-     sed -i "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $WFILE
-     sed -i "s/CACRT/$CACRT/g" $WFILE
-     sed -i "s/TOKEN/$TOKEN/g" $WFILE
-     sed -i "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
-
-     # Switch to worker context
-     kubectx $PREFIX$WORKER
-     WORKERNODEIP=`kubectl get nodes -o wide | grep $WORKER-worker | head -1 | awk '{ print $6 }'`
-     sed -i "s/NODEIP/$WORKERNODEIP/g" $WFILE
-     helm install kubeslice-worker kubeslice/kubeslice-worker -f $WFILE --namespace kubeslice-system  --create-namespace $WORKER_VERSION
-     echo Check for status...
-     kubectl get pods -n kubeslice-system
-     echo "Wait for kubeslice-system to be Running"
-     sleep 60
-     kubectl get pods -n kubeslice-system
-     kubectl create ns iperf
-     kubectl create ns bookinfo
- done
-
-sleep 60
-
-export KUBECONFIG=${PWD}/config/kubeconfig
-
-echo Switch to controller context and configure slices...
-kubectx $PREFIX$CONTROLLER
-kubectx
-
-# Slice setup
-# Make a slice.yaml from the slice.template.yaml
-SFILE=slice.yaml
-cp $SLICE_TEMPLATE $SFILE
-for WORKER in ${WORKERS[@]}; do
-    sed -i "s/- WORKER/- $WORKER/g" $SFILE
-    sed -i "/- $WORKER/ a \ \ \ \ - WORKER" $SFILE
-done
-sed -i '/- WORKER/d' $SFILE
-
-PROJECT_NAMESPACE=kubeslice-preprod
-
-echo kubectl apply -f $SFILE -n $PROJECT_NAMESPACE
-kubectl apply -f $SFILE -n $PROJECT_NAMESPACE
-
-echo "Wait for vl3(slice) and gateway pod to be Running in worker clusters"
-sleep 120
-
-echo "Final status check..."
-for WORKER in ${WORKERS[@]}; do
-    echo $PREFIX$WORKER
-    kubectx $PREFIX$WORKER
-    kubectx
-    kubectl get pods -n kubeslice-system
+    echo "Installing calico for cluster $CLUSTER"
+    calico
 done
 
-# Iperf setup
-echo Setup Iperf
-# Switch to kind-worker-1 context
-kubectx $PREFIX${WORKERS[0]}
-kubectx
-kubectl create namespace iperf
+######################################################################
+# Add kubeslice config to the just-created kind clusters
+######################################################################
+$KUBESLICE_CLI --config $CLI_CFG install
 
-kubectl apply -f iperf-sleep.yaml -n iperf
-echo "Wait for iperf to be Running"
-sleep 60
-kubectl get pods -n iperf
 
-# Switch to kind-worker-2 context
+######################################################################
+# Start iperf installation
+# 1. Add iperf namespaces to the clusters
+# 2. Create a slice and onboard the iperf namespace in each cluster onto the slice
+# 3. Deploy the iperf server and client
+# 4. Verify connectivity between the clusters by running iperf
+######################################################################
+
+# 1. Make namesapces first
 for WORKER in ${WORKERS[@]}; do
-  if [[ $WORKER -ne ${WORKERS[0]} ]]; then
     kubectx $PREFIX$WORKER
     kubectx
     kubectl create namespace iperf
-    kubectl apply -f iperf-server.yaml -n iperf
-    echo "Wait for iperf to be Running"
-    sleep 60
-    kubectl get pods -n iperf
-  fi
+    sleep 10
 done
 
-# Switch to worker context
+# set kubectx to controller?    How do you tell kubeslice-cli to do that?
+#kubectx $PREFIX$CONTROLLER
+
+# 2. Add the iperf slice
+$KUBESLICE_CLI --config $CLI_CFG create sliceConfig -n kubeslice-$PROJECT_NAME -f ${PWD}/config/slice-iperf.yaml
+
+### Make sure the slice is ready before proceeding
+echo "Wait for the slice to be ready"
+for i in $(seq 1 20)
+do
+    sleep 10
+    # Watch for the slice tunnel to be up
+    STATUS=`kubectl get pods -n kubeslice-system | grep ^iperf-slice`
+    echo $STATUS
+    STATUS=`echo $STATUS | awk '{ print $3 }'`
+    if [[ "$STATUS" == "Running" ]]; then
+	break
+    fi 
+done
+kubectl get pods -n kubeslice-system
+
+#############################################################
+# 3. Iperf setup in the clusters/namespace/slice already created previously
+# Switch to kind-worker-2 context
+kubectx $PREFIX${WORKERS[1]}
+kubectl apply -f iperf-server.yaml -n iperf
+if [ $? -ne 0 ]; then
+    echo "Apply failed... maybe kind cluster is busy?  Retry shortly"
+    sleep 60
+    kubectl apply -f iperf-server.yaml -n iperf
+fi
+
+echo "Wait for iperf to be Running"
+for i in $(seq 1 20)
+do
+    sleep 10
+    STATUS=`kubectl get pods -n iperf | egrep iperf-server`
+    echo $STATUS
+    STATUS=`echo $STATUS | awk '{ print $3 }'`
+    if [[ "$STATUS" == "Running" ]]; then
+	break
+    fi 
+done
+kubectl get pods -n iperf
+
+# Switch to kind-worker-1 context
 kubectx $PREFIX${WORKERS[0]}
-kubectx
+kubectl apply -f iperf-sleep.yaml -n iperf
+if [ $? -ne 0 ]; then
+    echo "Apply failed... maybe kind cluster is busy?  Retry shortly"
+    sleep 60
+    kubectl apply -f iperf-sleep.yaml -n iperf
+fi
+echo "Wait for iperf to be Running"
+for i in $(seq 1 20)
+do
+    sleep 10
+    STATUS=`kubectl get pods -n iperf | egrep iperf-sleep`
+    echo $STATUS
+    STATUS=`echo $STATUS | awk '{ print $3 }'`
+    if [[ "$STATUS" == "Running" ]]; then
+	break
+    fi 
+done
+kubectl get pods -n iperf
 
-sleep 90
-# Check Iperf connectity from iperf sleep to iperf server
+# 4. Check Iperf connectity from iperf sleep to iperf server
 IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
-
 kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
 if [ $? -ne 0 ]; then
   echo '***Error: Connectivity between clusters not succesful!'

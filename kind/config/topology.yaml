@@ -10,7 +10,7 @@ configuration:
       - name: worker-2
         context_name: kind-worker-2      
   kubeslice_configuration:
-    project_name: preprod
+    project_name: demo
   helm_chart_configuration:
     repo_alias: kubeslice
     repo_url: https://kubeslice.github.io/charts/
@@ -20,3 +20,4 @@ configuration:
       chart_name: kubeslice-controller
     worker_chart:
       chart_name: kubeslice-worker
+

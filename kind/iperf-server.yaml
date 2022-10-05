@@ -42,7 +42,7 @@ metadata:
   name: iperf-server
   namespace: iperf
 spec:
-  slice: convoy
+  slice: iperf-slice
   selector:
     matchLabels:
       app: iperf-server
