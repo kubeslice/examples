@@ -283,15 +283,16 @@ do
     sleep 10
     # Watch for the slice tunnel to be up
     STATUS=`kubectl get pods -n kubeslice-system | grep ^iperf-slice`
-    [[ ! -z "$STATUS" ]] && echo $STATUS
+    [[ ! -z "$STATUS" ]] && echo $STATUS || echo -n "."
     STATUS=`echo $STATUS | awk '{ print $3 }'`
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
 done
-kubectl get pods -n kubeslice-system
+#kubectl get pods -n kubeslice-system
+# Not sure why this sleep is necessary... but sometimes seems to be?
 sleep 20
-kubectl get pods -n kubeslice-system
+#kubectl get pods -n kubeslice-system
 
 #############################################################
 # 3. Iperf setup in the clusters/namespace/slice already created previously
@@ -309,7 +310,7 @@ for i in $(seq 1 20)
 do
     sleep 10
     STATUS=`kubectl get pods -n iperf | egrep iperf-server`
-    [[ ! -z "$STATUS" ]] && echo $STATUS
+    [[ ! -z "$STATUS" ]] && echo $STATUS || echo -n "."
     STATUS=`echo $STATUS | awk '{ print $3 }'`
     if [[ "$STATUS" == "Running" ]]; then
 	break
@@ -345,7 +346,8 @@ do
     STATUS=`kubectl describe serviceimport -n iperf | egrep "Dns Name:"`
     if [[ -z "$STATUS" ]]; then
 	break
-    fi 
+    fi
+    echo -n "."
 done
 
 #############################################################
