@@ -4,7 +4,6 @@ kind/controller-config.yaml
 kind/slice.yaml
 kind/worker-*.config.yaml
 kind/config/kubeconfig
-kind/config/slice-iperf.yaml
 kind/config/topology.tmp.yaml
 kind/kubeslice
 *~

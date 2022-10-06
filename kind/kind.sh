@@ -96,7 +96,6 @@ calico() {
   sed -i "s,https://$SERVER_CONFIG,https://$CLUSTER_DOCKER_IP:6443,g" ${BASE_DIR}/config/kubeconfig
 
   kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/tigera-operator.yaml
-#   echo "Waiting on calico to start..."
   sleep 5
   kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/custom-resources.yaml
   echo "Waiting on calico to start..."
@@ -221,9 +220,7 @@ if [ "$CLI_CFG_PASSED" == false ]; then
     CLI_CFG=${PWD}/config/topology.tmp.yaml
 fi
 
-# Now CLI_CFG points at the correct file
-
-cat $CLI_CFG
+# Now CLI_CFG points at the correct file (default or user specified)
 PROJECT_NAME=`grep project_name: $CLI_CFG | awk '{ print $2 }'`
 
 ######################################################################
@@ -248,6 +245,9 @@ for CLUSTER in ${WORKERS[@]}; do
     calico
 done
 
+echo
+echo "*** Finished creating kind clusters... Starting KubeSlice Install ***"
+
 ######################################################################
 # Add kubeslice config to the just-created kind clusters
 ######################################################################
@@ -259,21 +259,21 @@ $KUBESLICE_CLI --config $CLI_CFG install
 # 1. Add iperf namespaces to the clusters
 # 2. Create a slice and onboard the iperf namespace in each cluster onto the slice
 # 3. Deploy the iperf server and client
-# 4. Verify connectivity between the clusters by running iperf
+# 4. Wait for the DNS service name to be propogated to the client cluster
+# 5. Verify connectivity between the clusters by running iperf
 ######################################################################
-
+echo
+echo "*** KubeSlice control plane installed... Starting iperf slice install ***"
 # 1. Make namesapces first
+echo "Creating namespaces in each cluster for iperf slice"
 for WORKER in ${WORKERS[@]}; do
     kubectx $PREFIX$WORKER
-    kubectx
     kubectl create namespace iperf
     sleep 10
 done
 
-# set kubectx to controller?    How do you tell kubeslice-cli to do that?
-#kubectx $PREFIX$CONTROLLER
-
 # 2. Add the iperf slice
+echo "Adding the iperf slice"
 $KUBESLICE_CLI --config $CLI_CFG create sliceConfig -n kubeslice-$PROJECT_NAME -f ${PWD}/config/slice-iperf.yaml
 
 ### Make sure the slice is ready before proceeding
@@ -283,12 +283,14 @@ do
     sleep 10
     # Watch for the slice tunnel to be up
     STATUS=`kubectl get pods -n kubeslice-system | grep ^iperf-slice`
-    echo $STATUS
+    [[ ! -z "$STATUS" ]] && echo $STATUS
     STATUS=`echo $STATUS | awk '{ print $3 }'`
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
 done
+kubectl get pods -n kubeslice-system
+sleep 20
 kubectl get pods -n kubeslice-system
 
 #############################################################
@@ -307,13 +309,12 @@ for i in $(seq 1 20)
 do
     sleep 10
     STATUS=`kubectl get pods -n iperf | egrep iperf-server`
-    echo $STATUS
+    [[ ! -z "$STATUS" ]] && echo $STATUS
     STATUS=`echo $STATUS | awk '{ print $3 }'`
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
 done
-kubectl get pods -n iperf
 
 # Switch to kind-worker-1 context
 kubectx $PREFIX${WORKERS[0]}
@@ -334,9 +335,21 @@ do
 	break
     fi 
 done
-kubectl get pods -n iperf
 
-# 4. Check Iperf connectity from iperf sleep to iperf server
+#############################################################
+# 4. Wait for the service to be exported and the DNS name to be resolvable in the client cluster
+echo "Waiting for iperf-server service reachable"
+for i in $(seq 1 20)
+do
+    sleep 10
+    STATUS=`kubectl describe serviceimport -n iperf | egrep "Dns Name:"`
+    if [[ -z "$STATUS" ]]; then
+	break
+    fi 
+done
+
+#############################################################
+# 5. Check Iperf connectity from iperf sleep to iperf server
 IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
 kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
 if [ $? -ne 0 ]; then
