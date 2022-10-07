@@ -13,7 +13,7 @@ configuration:
     project_name: demo
   helm_chart_configuration:
     repo_alias: kubeslice
-    repo_url: https://kubeslice.github.io/charts/
+    repo_url: https://kubeslice.github.io/kubeslice/
     cert_manager_chart:
       chart_name: cert-manager
     controller_chart:
