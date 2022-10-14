@@ -228,7 +228,11 @@ PROJECT_NAME=`grep project_name: $CLI_CFG | awk '{ print $2 }'`
 ######################################################################
 
 echo Create the Controller cluster
-kind create cluster --name $CONTROLLER --config controller-cluster.yaml $KIND_K8S_VERSION
+kind create cluster --name $CONTROLLER --config controller-cluster.yaml --wait 5m $KIND_K8S_VERSION
+if [ $? -ne 0 ]; then
+    echo "Kind cluster create failed... exiting"
+    exit 1
+fi
 
 echo "Installing calico for cluster $CONTROLLER"
 calico
@@ -237,7 +241,11 @@ echo Create the Worker clusters
 for CLUSTER in ${WORKERS[@]}; do
     echo Creating cluster $CLUSTER    
     echo kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
-    kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
+    kind create cluster --name $CLUSTER --config worker-cluster.yaml --wait 5m $KIND_K8S_VERSION
+    if [ $? -ne 0 ]; then
+	echo "Kind cluster create failed... exiting"
+	exit 1
+    fi
     # Make sure the cluster context exists
     kubectl cluster-info --context $PREFIX$CLUSTER
 
@@ -251,7 +259,12 @@ echo "*** Finished creating kind clusters... Starting KubeSlice Install ***"
 ######################################################################
 # Add kubeslice config to the just-created kind clusters
 ######################################################################
-$KUBESLICE_CLI --config $CLI_CFG install
+# This sometimes fails (?) if the underlying kind clusters are busy...
+# so consider a few retries
+for i in 1 2 3; do
+    $KUBESLICE_CLI --config $CLI_CFG install && break
+    echo "$KUBESLICE_CLI returned an error... retrying"
+done
 
 
 ######################################################################
@@ -274,7 +287,10 @@ done
 
 # 2. Add the iperf slice
 echo "Adding the iperf slice"
-$KUBESLICE_CLI --config $CLI_CFG create sliceConfig -n kubeslice-$PROJECT_NAME -f ${PWD}/config/slice-iperf.yaml
+for i in 1 2 3; do
+    $KUBESLICE_CLI --config $CLI_CFG create sliceConfig -n kubeslice-$PROJECT_NAME -f ${PWD}/config/slice-iperf.yaml && break
+    echo "$KUBESLICE_CLI returned an error... retrying"
+done
 
 ### Make sure the slice is ready before proceeding
 echo "Wait for the slice to be ready"
@@ -287,6 +303,10 @@ do
     STATUS=`echo $STATUS | awk '{ print $3 }'`
     if [[ "$STATUS" == "Running" ]]; then
 	break
+    fi 
+    if [[ "$STATUS" == "ImagePullBackOff" ]]; then
+	echo "***** Error: Docker pull limit exceeded.   Exiting"
+	exit 1
     fi 
 done
 #kubectl get pods -n kubeslice-system
@@ -315,6 +335,10 @@ do
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
+    if [[ "$STATUS" == "ImagePullBackOff" ]]; then
+	echo "***** Error: Docker pull limit exceeded.   Exiting"
+	exit 1
+    fi 
 done
 
 # Switch to kind-worker-1 context
@@ -334,6 +358,10 @@ do
     STATUS=`echo $STATUS | awk '{ print $3 }'`
     if [[ "$STATUS" == "Running" ]]; then
 	break
+    fi 
+    if [[ "$STATUS" == "ImagePullBackOff" ]]; then
+	echo "***** Error: Docker pull limit exceeded.   Exiting"
+	exit 1
     fi 
 done
 
