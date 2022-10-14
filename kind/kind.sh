@@ -304,7 +304,7 @@ do
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
-    if [[ "$STATUS" == "ImagePullBackOff" ]]; then
+    if [[ "$STATUS" =~ "ImagePullBackOff" ]]; then
 	echo "***** Error: Docker pull limit exceeded.   Exiting"
 	exit 1
     fi 
@@ -335,7 +335,7 @@ do
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
-    if [[ "$STATUS" == "ImagePullBackOff" ]]; then
+    if [[ "$STATUS" =~ "ImagePullBackOff" ]]; then
 	echo "***** Error: Docker pull limit exceeded.   Exiting"
 	exit 1
     fi 
@@ -359,7 +359,7 @@ do
     if [[ "$STATUS" == "Running" ]]; then
 	break
     fi 
-    if [[ "$STATUS" == "ImagePullBackOff" ]]; then
+    if [[ "$STATUS" =~ "ImagePullBackOff" ]]; then
 	echo "***** Error: Docker pull limit exceeded.   Exiting"
 	exit 1
     fi 
