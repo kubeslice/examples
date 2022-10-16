@@ -34,10 +34,10 @@ uninstall() {
     kubectl delete -f ${CONFIG_DIR}/loadgenerator.yaml -n $BOUTIQUE_NAMESPACE
 
     kubectx $PREFIX$CONTROLLER
-    kubectl apply -f deletewater.yaml -n kubeslice-avesha
+    kubectl apply -f deletewater.yaml -n kubeslice-system
     echo "Wait for boutique namespace to be deboarded"
     sleep 30
-    kubectl delete -f deletewater.yaml -n kubeslice-avesha
+    kubectl delete -f deletewater.yaml -n kubeslice-system
     for cluster in $SERVICES_CLUSTER $PRODUCT_CLUSTER; do
       echo "Deleting namespace $BOUTIQUE_NAMESPACE on cluster $cluster"
       kubectx $cluster
@@ -85,7 +85,7 @@ kubectl create namespace $BOUTIQUE_NAMESPACE
 kubectx $SERVICES_CLUSTER
 kubectl create namespace $BOUTIQUE_NAMESPACE
 kubectx $PREFIX$CONTROLLER
-kubectl apply -f water.yaml -n kubeslice-avesha
+kubectl apply -f water.yaml -n kubeslice-system
 echo "Waiting a few seconds for slice to be applied"
 sleep 10
 kubectx $PRODUCT_CLUSTER

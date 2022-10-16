@@ -14,12 +14,17 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+BASE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+KUBESLICE_CLI="kubeslice-cli"
+
 ENV=kind.env
 CLEAN=false
 VERBOSE=false
+CLI_CFG=${BASE_DIR}/config/topology.yaml
+CLI_CFG_PASSED=false
 
 # First, check args
-VALID_ARGS=$(getopt -o chve: --long clean,help,verbose,env: -- "$@")
+VALID_ARGS=$(getopt -o chvek: --long clean,help,verbose,env,config: -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -49,6 +54,11 @@ while [ : ]; do
         VERBOSE=true
         shift
         ;;
+    -k | --config)
+        CLI_CFG=$2
+	CLI_CFG_PASSED=true
+        shift 2
+        ;;
     --) shift; 
         break 
         ;;
@@ -73,7 +83,35 @@ clean() {
         echo kind delete cluster --name $CLUSTER
         kind delete cluster --name $CLUSTER
     done
+
+    # [ -d ${BASE_DIR}/bin ] && rm -rf ${BASE_DIR}/bin
+    [ -d ${BASE_DIR}/config ] && rm -rf ${BASE_DIR}/config/kubeconfig
+    
 }
+
+calico() {
+  CLUSTER_DOCKER_IP=$(kubectl --kubeconfig config/kubeconfig get nodes -o wide | grep control-plane | awk '{  print $6}')
+  CURRENT_CONTEXT=$(kubectl --kubeconfig config/kubeconfig config current-context)
+  SERVER_CONFIG=$(grep -m 1 -B 2 "name: $CURRENT_CONTEXT" ./config/kubeconfig | grep server | sed -n 's#server: https://##p' | sed ':a;s/^\([[:space:]]*\)[[:space:]]/\1/;ta')
+  sed -i "s,https://$SERVER_CONFIG,https://$CLUSTER_DOCKER_IP:6443,g" ${BASE_DIR}/config/kubeconfig
+
+  kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/tigera-operator.yaml
+  sleep 5
+  kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/custom-resources.yaml
+  echo "Waiting on calico to start..."
+  sleep 25
+  for pod in $(kubectl get pods -n calico-system | tail -n +2 | awk '{ print $1 }'); do
+    while [[ $(kubectl get pods $pod -n calico-system -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
+      sleep 1
+    done
+  done
+}
+
+# See if we're being asked to be chatty
+if [ "$VERBOSE" == true ]; then
+    # Log all the commands (w/o having to echo them)
+    set -o xtrace
+fi
 
 # Check for requirements
 echo Checking for required tools...
@@ -120,7 +158,7 @@ if [ "$OS" == "ubuntu" ]; then
 	echo Warning: kind recommends at least 512 fs.inotify.max_user_instances
     fi
 else
-    # Not Ubuntu... on yor own
+    # Not Ubuntu... on your own
     echo Platform is $OS \(not Ubuntu\)... other checks skipped
 fi
 
@@ -154,210 +192,225 @@ if [ "$CLEAN" == true ]; then
 fi
 
 # Create kind clusters
+if [ ! -z "$KUBECONFIG" ]; then
+  OLD_KUBECONFIG="$KUBECONFIG"
+fi
+
+[ ! -d ${BASE_DIR}/config ] && mkdir ${BASE_DIR}/config
+
+export KUBECONFIG=${BASE_DIR}/config/kubeconfig
+
+command -v $KUBESLICE_CLI
+if ! $(command -v $KUBESLICE_CLI &> /dev/null) ; then
+  echo "$KUBESLICE_CLI not found. Trying to download latest version"
+
+fi
+
+if ! $(command -v $KUBESLICE_CLI &> /dev/null) ; then
+  echo "$KUBESLICE_CLI not found. Trying to download latest version"
+
+  RELEASE_BASE_URL="https://github.com/kubeslice/kubeslice-cli/releases/download/0.3.0"
+  
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    CLI_URL="${RELEASE_BASE_URL}/kubeslice-cli-linux-amd64"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    if [[ $(uname -m) == 'arm64' ]]; then
+      CLI_URL="${RELEASE_BASE_URL}/kubeslice-cli-darwin-arm64"
+    elif [[ $(uname -m) == 'x86_64' ]]; then
+      CLI_URL="${RELEASE_BASE_URL}/kubeslice-cli-darwin-amd64"
+    fi
+  fi
+
+  [ ! -d ${BASE_DIR}/bin ] && mkdir ${BASE_DIR}/bin
+
+  # wget -O $KUBESLICE_CLI $CLI_URL
+  if [ ! -f "${BASE_DIR}/bin/$KUBESLICE_CLI" ]; then
+    wget -O $KUBESLICE_CLI $CLI_URL 
+    mv ${BASE_DIR}/$KUBESLICE_CLI ${BASE_DIR}/bin/    
+  fi
+  
+  chmod +x ${BASE_DIR}/bin/$KUBESLICE_CLI
+  # echo Adding $KUBESLICE_CLI to PATH
+  # export PATH=$PATH:${BASE_DIR}/bin/$KUBESLICE_CLI
+
+  KUBESLICE_CLI=${BASE_DIR}/bin/$KUBESLICE_CLI
+fi
+
+if [ "$CLI_CFG_PASSED" == false ]; then
+    # Modify and use the default template topology file
+    sed "s#<KUBECONFIG_PATH>#${BASE_DIR}/config/kubeconfig#g" ${BASE_DIR}/config/topology.yaml > ${PWD}/config/topology.tmp.yaml
+    CLI_CFG=${PWD}/config/topology.tmp.yaml
+fi
+
+# Now CLI_CFG points at the correct file (default or user specified)
+PROJECT_NAME=`grep project_name: $CLI_CFG | awk '{ print $2 }'`
+
+######################################################################
+# Create the kind clusters here
+######################################################################
+
 echo Create the Controller cluster
-echo kind create cluster --name $CONTROLLER --config controller-cluster.yaml $KIND_K8S_VERSION
-kind create cluster --name $CONTROLLER --config controller-cluster.yaml $KIND_K8S_VERSION
+kind create cluster --name $CONTROLLER --config controller-cluster.yaml --wait 5m $KIND_K8S_VERSION
+if [ $? -ne 0 ]; then
+    echo "Kind cluster create failed... exiting"
+    exit 1
+fi
+
+echo "Installing calico for cluster $CONTROLLER"
+calico
 
 echo Create the Worker clusters
 for CLUSTER in ${WORKERS[@]}; do
-    echo Creating cluster $CLUSTER
+    echo Creating cluster $CLUSTER    
     echo kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
-    kind create cluster --name $CLUSTER --config worker-cluster.yaml $KIND_K8S_VERSION
+    kind create cluster --name $CLUSTER --config worker-cluster.yaml --wait 5m $KIND_K8S_VERSION
+    if [ $? -ne 0 ]; then
+	echo "Kind cluster create failed... exiting"
+	exit 1
+    fi
     # Make sure the cluster context exists
     kubectl cluster-info --context $PREFIX$CLUSTER
+
+    echo "Installing calico for cluster $CLUSTER"
+    calico
 done
 
-# See if we're being asked to be chatty
-if [ "$VERBOSE" == true ]; then
-    # Log all the commands (w/o having to echo them)
-    set -o xtrace
+echo
+echo "*** Finished creating kind clusters... Starting KubeSlice Install ***"
+
+######################################################################
+# Add kubeslice config to the just-created kind clusters
+######################################################################
+# This sometimes fails (?) if the underlying kind clusters are busy...
+# so consider a few retries
+for i in 1 2 3; do
+    $KUBESLICE_CLI --config $CLI_CFG install && break
+    echo "$KUBESLICE_CLI returned an error... retrying"
+done
+
+
+######################################################################
+# Start iperf installation
+# 1. Add iperf namespaces to the clusters
+# 2. Create a slice and onboard the iperf namespace in each cluster onto the slice
+# 3. Deploy the iperf server and client
+# 4. Wait for the DNS service name to be propogated to the client cluster
+# 5. Verify connectivity between the clusters by running iperf
+######################################################################
+echo
+echo "*** KubeSlice control plane installed... Starting iperf slice install ***"
+# 1. Make namesapces first
+echo "Creating namespaces in each cluster for iperf slice"
+for WORKER in ${WORKERS[@]}; do
+    kubectx $PREFIX$WORKER
+    kubectl create namespace iperf
+    sleep 10
+done
+
+# 2. Add the iperf slice
+echo "Adding the iperf slice"
+for i in 1 2 3; do
+    $KUBESLICE_CLI --config $CLI_CFG create sliceConfig -n kubeslice-$PROJECT_NAME -f ${PWD}/config/slice-iperf.yaml && break
+    echo "$KUBESLICE_CLI returned an error... retrying"
+done
+
+### Make sure the slice is ready before proceeding
+echo "Wait for the slice to be ready"
+for i in $(seq 1 20)
+do
+    sleep 10
+    # Watch for the slice tunnel to be up
+    STATUS=`kubectl get pods -n kubeslice-system | grep ^iperf-slice`
+    [[ ! -z "$STATUS" ]] && echo $STATUS || echo -n "."
+    STATUS=`echo $STATUS | awk '{ print $3 }'`
+    if [[ "$STATUS" == "Running" ]]; then
+	break
+    fi 
+    if [[ "$STATUS" =~ "ImagePullBackOff" ]]; then
+	echo "***** Error: Docker pull limit exceeded.   Exiting"
+	exit 1
+    fi 
+done
+#kubectl get pods -n kubeslice-system
+# Not sure why this sleep is necessary... but sometimes seems to be?
+sleep 20
+#kubectl get pods -n kubeslice-system
+
+#############################################################
+# 3. Iperf setup in the clusters/namespace/slice already created previously
+# Switch to kind-worker-2 context
+kubectx $PREFIX${WORKERS[1]}
+kubectl apply -f iperf-server.yaml -n iperf
+if [ $? -ne 0 ]; then
+    echo "Apply failed... maybe kind cluster is busy?  Retry shortly"
+    sleep 60
+    kubectl apply -f iperf-server.yaml -n iperf
 fi
 
-# Helm repo access
-echo Setting up helm...
-helm repo remove kubeslice
-helm repo add kubeslice $REPO
-helm repo update
-
-# Controller setup...
-echo Switch to controller context and set it up...
-kubectx $PREFIX$CONTROLLER
-kubectx
-
-helm install cert-manager kubeslice/cert-manager --namespace cert-manager  --create-namespace --set installCRDs=true
-
-echo "Check for cert-manager pods"
-kubectl get pods -n cert-manager
-echo "Wait for cert-manager to be Running"
-sleep 30
-
-kubectl get pods -n cert-manager
-
-# Install kubeslice-controller kubeslice/kubeslice-controller
-# First, get the controller's endpoint (sed removes the colors encoded in the cluster-info output)
-INTERNALIP=`kubectl get nodes -o wide | grep master | awk '{ print $6 }'`
-CONTROLLER_ENDPOINT=$INTERNALIP:6443
-echo CONTROLLEREndPoint is: $CONTROLLER_ENDPOINT
-
-DECODE_CONTROLLER_ENDPOINT=`echo -n https://$CONTROLLER_ENDPOINT | base64`
-echo Endpoint after base64 is: $DECODE_CONTROLLER_ENDPOINT
-
-# Make a controller values yaml from the controller template yaml
-CFILE=$CONTROLLER-config.yaml
-cp $CONTROLLER_TEMPLATE $CFILE
-sed -i "s/ENDPOINT/$CONTROLLER_ENDPOINT/g" $CFILE
-
-echo "Install the kubeslice-controller"
-helm install kubeslice-controller kubeslice/kubeslice-controller -f controller-config.yaml --namespace kubeslice-controller --create-namespace $CONTROLLER_VERSION
-
-echo Check for status...
-kubectl get pods -n kubeslice-controller
-echo "Wait for kubeslice-controller-manager to be Running"
-sleep 90
-
-kubectl get pods -n kubeslice-controller
-
-echo kubectl apply -f project.yaml -n kubeslice-controller
-kubectl apply -f project.yaml -n kubeslice-controller
-sleep 10
-
-echo kubectl get project -n kubeslice-avesha
-kubectl get project -n kubeslice-avesha
-
-echo kubectl get sa -n kubeslice-avesha
-kubectl get sa -n kubeslice-avesha
-
-# Clusters registration setup
-# Make a clusters-registration.yaml from the clusters-registration.template.yaml
-REGFILE=clusters-registration.yaml
-echo "Register clusters"
-for WORKER in ${WORKERS[@]}; do
-    cp $REGISTRATION_TEMPLATE $REGFILE
-    sed -i "s/WORKER/$WORKER/g" $REGFILE
-    kubectl apply -f clusters-registration.yaml -n kubeslice-avesha
+echo "Wait for iperf to be Running"
+for i in $(seq 1 20)
+do
+    sleep 10
+    STATUS=`kubectl get pods -n iperf | egrep iperf-server`
+    [[ ! -z "$STATUS" ]] && echo $STATUS || echo -n "."
+    STATUS=`echo $STATUS | awk '{ print $3 }'`
+    if [[ "$STATUS" == "Running" ]]; then
+	break
+    fi 
+    if [[ "$STATUS" =~ "ImagePullBackOff" ]]; then
+	echo "***** Error: Docker pull limit exceeded.   Exiting"
+	exit 1
+    fi 
 done
 
-echo kubectl get clusters -n kubeslice-avesha
-kubectl get clusters -n kubeslice-avesha
-
-# Worker setup
-# Get secret info from controller...
-for WORKER in ${WORKERS[@]}; do
-
-    kubectx $PREFIX$CONTROLLER
-
-    SECRET=`kubectl get secrets -n kubeslice-avesha| grep $WORKER | awk '{print $1}'`
-    echo Secret for worker $WORKER is: $SECRET
-
-    # Don't use endpoint from the secrets file... use the one we created above
-    echo "Readable ENDPOINT is: " $DECODE_CONTROLLER_ENDPOINT
-
-    NAMESPACE=`kubectl get secrets $SECRET -o yaml -n kubeslice-avesha | grep -m 1 " namespace" | awk '{print $2}'`
-    NAMESPACE=`echo -n $NAMESPACE`
-    CACRT=`kubectl get secrets $SECRET -o yaml -n kubeslice-avesha | grep -m 1 " ca.crt" | awk '{print $2}'`
-    CACRT=`echo -n $CACRT`
-    TOKEN=`kubectl get secrets $SECRET -o yaml -n kubeslice-avesha | grep -m 1 " token" | awk '{print $2}'`
-    TOKEN=`echo -n $TOKEN`
-    CLUSTERNAME=`echo -n $WORKER`
-
-    if [ "$VERBOSE" == true ]; then
-	echo Namespace $NAMESPACE
-	echo Endpoint $ENDPOINT
-	echo Ca.crt $CACRT
-	echo Token $TOKEN
-	echo ClusterName $CLUSTERNAME
-    fi
-    
-    # Convert the template info a .yaml for this worker
-    WFILE=$WORKER.config.yaml
-    cp $WORKER_TEMPLATE $WFILE
-    sed -i "s/NAMESPACE/$NAMESPACE/g" $WFILE
-    sed -i "s/ENDPOINT/$DECODE_CONTROLLER_ENDPOINT/g" $WFILE
-    sed -i "s/CACRT/$CACRT/g" $WFILE
-    sed -i "s/TOKEN/$TOKEN/g" $WFILE
-    sed -i "s/WORKERNAME/$CLUSTERNAME/g" $WFILE
-
-
-    # Switch to worker context
-    kubectx $PREFIX$WORKER
-    WORKERNODEIP=`kubectl get nodes -o wide | grep $WORKER-worker | head -1 | awk '{ print $6 }'`
-    sed -i "s/NODEIP/$WORKERNODEIP/g" $WFILE
-    helm install kubeslice-worker kubeslice/kubeslice-worker -f $WFILE --namespace kubeslice-system  --create-namespace $WORKER_VERSION
-    echo Check for status...
-    kubectl get pods -n kubeslice-system
-    echo "Wait for kubeslice-system to be Running"
-    sleep 60
-    kubectl get pods -n kubeslice-system
-    kubectl create ns iperf
-    kubectl create ns bookinfo
-done
-
-sleep 60
-echo Switch to controller context and configure slices...
-kubectx $PREFIX$CONTROLLER
-kubectx
-
-# Slice setup
-# Make a slice.yaml from the slice.template.yaml
-SFILE=slice.yaml
-cp $SLICE_TEMPLATE $SFILE
-for WORKER in ${WORKERS[@]}; do
-    sed -i "s/- WORKER/- $WORKER/g" $SFILE
-    sed -i "/- $WORKER/ a \ \ \ \ - WORKER" $SFILE
-done
-sed -i '/- WORKER/d' $SFILE
-
-echo kubectl apply -f $SFILE -n kubeslice-avesha
-kubectl apply -f $SFILE -n kubeslice-avesha
-
-echo "Wait for vl3(slice) and gateway pod to be Running in worker clusters"
-sleep 120
-
-echo "Final status check..."
-for WORKER in ${WORKERS[@]}; do
-    echo $PREFIX$WORKER
-    kubectx $PREFIX$WORKER
-    kubectx
-    kubectl get pods -n kubeslice-system
-done
-
-
-# Iperf setup
-echo Setup Iperf
 # Switch to kind-worker-1 context
 kubectx $PREFIX${WORKERS[0]}
-kubectx
-
 kubectl apply -f iperf-sleep.yaml -n iperf
+if [ $? -ne 0 ]; then
+    echo "Apply failed... maybe kind cluster is busy?  Retry shortly"
+    sleep 60
+    kubectl apply -f iperf-sleep.yaml -n iperf
+fi
 echo "Wait for iperf to be Running"
-sleep 60
-kubectl get pods -n iperf
-
-# Switch to kind-worker-2 context
-for WORKER in ${WORKERS[@]}; do
-    if [[ $WORKER -ne ${WORKERS[0]} ]]; then 
-        kubectx $PREFIX$WORKER
-        kubectx
-        kubectl apply -f iperf-server.yaml -n iperf
-        echo "Wait for iperf to be Running"
-        sleep 60
-        kubectl get pods -n iperf
-    fi
+for i in $(seq 1 20)
+do
+    sleep 10
+    STATUS=`kubectl get pods -n iperf | egrep iperf-sleep`
+    echo $STATUS
+    STATUS=`echo $STATUS | awk '{ print $3 }'`
+    if [[ "$STATUS" == "Running" ]]; then
+	break
+    fi 
+    if [[ "$STATUS" =~ "ImagePullBackOff" ]]; then
+	echo "***** Error: Docker pull limit exceeded.   Exiting"
+	exit 1
+    fi 
 done
 
-# Switch to worker context
-kubectx $PREFIX${WORKERS[0]}
-kubectx
+#############################################################
+# 4. Wait for the service to be exported and the DNS name to be resolvable in the client cluster
+echo "Waiting for iperf-server service reachable"
+for i in $(seq 1 20)
+do
+    sleep 10
+    STATUS=`kubectl describe serviceimport -n iperf | egrep "Dns Name:"`
+    if [[ -z "$STATUS" ]]; then
+	break
+    fi
+    echo -n "."
+done
 
-sleep 90
-# Check Iperf connectity from iperf sleep to iperf server
+#############################################################
+# 5. Check Iperf connectity from iperf sleep to iperf server
 IPERF_CLIENT_POD=`kubectl get pods -n iperf | grep iperf-sleep | awk '{ print$1 }'`
-
 kubectl exec -it $IPERF_CLIENT_POD -c iperf -n iperf -- iperf -c iperf-server.iperf.svc.slice.local -p 5201 -i 1 -b 10Mb;
 if [ $? -ne 0 ]; then
-    echo '***Error: Connectivity between clusters not succesful!'
-    ERR=$((ERR+1))
+  echo '***Error: Connectivity between clusters not succesful!'
+  ERR=$((ERR+1))
 fi
+
+# set KUBECONFIG to previous value
+export KUBECONFIG="${OLD_KUBECONFIG}"
 
 # Return status
 exit $ERR

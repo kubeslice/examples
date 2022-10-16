@@ -1,0 +1,31 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: SliceConfig
+metadata:
+  name: iperf-slice
+  namespace: kubeslice-demo 
+spec:  
+  sliceSubnet: 10.190.0.0/16
+  sliceType: Application
+  sliceGatewayProvider:
+    sliceGatewayType: OpenVPN
+    sliceCaType: Local
+  sliceIpamType: Local
+  clusters: [worker-1,worker-2]
+  qosProfileDetails:
+    queueType: HTB
+    priority: 0
+    tcType: BANDWIDTH_CONTROL
+    bandwidthCeilingKbps: 3000000
+    bandwidthGuaranteedKbps: 200000
+    dscpClass: Default
+  namespaceIsolationProfile:
+   applicationNamespaces:
+    - namespace: iperf
+      clusters:
+      - '*'
+   isolationEnabled: true
+   allowedNamespaces:
+    - namespace: kube-system
+      clusters:
+      - '*'
+
