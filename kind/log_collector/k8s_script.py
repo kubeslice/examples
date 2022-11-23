@@ -1,27 +1,78 @@
 import os
 import kubernetes
 from kubernetes import client, config
+from pathlib import Path
+import sys
+import yaml
 
-# Configs can be set in Configuration class directly or using helper utility
-config.load_kube_config(
-    # config_file=os.environ.get("KUBECONFIG", KUBE_CONFIG_PATH),
-    config_file=os.environ.get("KUBECONFIG"),
-    # context=os.environ.get("KUBECONTEXT"),
-    context=os.environ.get("kind-controller"),
-)
+def validate_kubeconfig_file(kubeconfig_file):
+    try:
+        file = Path(kubeconfig_file)
+    except:
+        file = ""
+
+    return file.is_file()
+
+def get_kubeconfig_file():
+    if "KUBECONFIG" in os.environ:
+        config_file = os.environ.get("KUBECONFIG")
+    else:
+        config_file = input("Please provide full path to kubeconfig file: ")
+
+    if validate_kubeconfig_file(config_file): 
+        return config_file
+
+    return None
+
+def get_pods(client, namespace):
+    ret = client.list_namespaced_pod(namespace)
+    for i in ret.items:
+        print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
+        if "kubeslice-controller-manager" in i.metadata.name:
+            pod_name = i.metadata.name
+            break
+
+def get_cluster_roles(clusters):    
+    pass
+
+def get_contexts(config_file):
+    k8s_contexts = []
+    for context in config_file:
+        k8s_contexts.append(context["name"])
+
+    
+
+config_file = get_kubeconfig_file()
+with open("/home/jhveras/github/examples/kind/config/kubeconfig", mode="rb") as file:
+    k8s_config = yaml.safe_load(file)
+
+
+
+if config_file is not None:
+    # Configs can be set in Configuration class directly or using helper utility
+    config.load_kube_config(
+        config_file=os.environ.get(config_file),
+        context=os.environ.get("KUBECONTEXT")
+    )
+else:
+    print("Invalid config file")
+    print("Terminating program")
+    sys.exit(0)
+
+
+
+# /home/jhveras/github/examples/kind/config/kubeconfig
 
 controller_namespace = "kubeslice-controller"
+worker_namespace = "kubeslice-system"
 project_namespace = "kubeslice-demo"
 
-v1 = client.CoreV1Api()
-print("Listing pods with their IPs:")
-# ret = v1.list_pod_for_all_namespaces(watch=False)
-ret = v1.list_namespaced_pod(controller_namespace)
-for i in ret.items:
-    print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
-    if "kubeslice-controller-manager" in i.metadata.name:
-        pod_name = i.metadata.name
-        break
+client = client.CoreV1Api()
+
+print("**** Getting controller info ****")
+print("Listing pods:")
+get_pods(client, controller_namespace)
+
 
 # Print controller manager logs
 print("Controller logs ****")
