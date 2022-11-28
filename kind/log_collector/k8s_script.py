@@ -32,69 +32,117 @@ def get_pods(client, namespace):
             pod_name = i.metadata.name
             break
 
-def get_cluster_roles(clusters):    
-    pass
-
 def get_contexts(config_file):
     k8s_contexts = []
-    for context in config_file:
-        k8s_contexts.append(context["name"])
+    for context in range((len(config_file["clusters"]))):
+        k8s_contexts.append(config_file["clusters"][context]["name"])
+        print(config_file["clusters"][context]["name"])
 
-    
+    return k8s_contexts
 
-config_file = get_kubeconfig_file()
-with open("/home/jhveras/github/examples/kind/config/kubeconfig", mode="rb") as file:
-    k8s_config = yaml.safe_load(file)
+def get_cluster_roles(contexts, config_file):
+    roles = {}
+    workers = []
 
+    try:
+        for context in contexts:
+            config.load_kube_config(
+                config_file=os.environ.get(config_file),
+                context=context
+            )
 
+            v1 = client.CoreV1Api()
+            nameSpaceList = v1.list_namespace()
+            items = nameSpaceList.items
+            metadata = []
 
-if config_file is not None:
-    # Configs can be set in Configuration class directly or using helper utility
-    config.load_kube_config(
-        config_file=os.environ.get(config_file),
-        context=os.environ.get("KUBECONTEXT")
-    )
-else:
-    print("Invalid config file")
-    print("Terminating program")
-    sys.exit(0)
+            for item in items:
+                metadata.append(item.metadata)
 
+            namespaces = []
+            for i in metadata:
+                namespaces.append(i.name)
+
+            if "kubeslice-controller" in namespaces:
+                roles["controller"] = context
+            elif "kubeslice-system" in namespaces:
+                if "worker" in roles:
+                    workers = roles["worker"]
+                workers.append(context)
+                roles["worker"] = workers
+
+    except config.ConfigException as ce:
+        print("###### Could not parse kubeconfig file: ", config_file)
+        print(ce)
+
+    return roles
 
 
 # /home/jhveras/github/examples/kind/config/kubeconfig
-
+# /home/juan/.kube/config
 controller_namespace = "kubeslice-controller"
 worker_namespace = "kubeslice-system"
 project_namespace = "kubeslice-demo"
 
-client = client.CoreV1Api()
+if __name__ == "__main__":
+    config_file = get_kubeconfig_file()
+    with open(config_file, mode="rb") as file:
+        k8s_config = yaml.safe_load(file)
 
-print("**** Getting controller info ****")
-print("Listing pods:")
-get_pods(client, controller_namespace)
+    contexts = get_contexts(k8s_config)
+    clusters = get_cluster_roles(contexts, config_file)
+
+    print(clusters)
 
 
-# Print controller manager logs
-print("Controller logs ****")
-try:
-    api_instance = client.CoreV1Api()
-    api_response = api_instance.read_namespaced_pod_log(name=pod_name, namespace=controller_namespace, container='manager')
-    print(api_response)
-except ApiException as e:
-    print('Found exception in reading the logs')
 
-print("Controller Secrets ****")
-k = v1.list_namespaced_secret(namespace=controller_namespace, pretty="true")
-for i in k.items:
-    # print(i.metadata.name)
-    print(i)
 
-k = v1.list_namespaced_secret(namespace=project_namespace, pretty="true")
-for i in k.items:
-    # print(i.metadata.name)
-    print(i)
 
-k = kubernetes.client.CustomObjectsApi().list_cluster_custom_object(namespace=project_namespace)
-for i in k.items:
-    print(i)
+
+#if k8s_config is not None:    
+#        try:
+#            config.load_kube_config(
+#                config_file=os.environ.get(config_file),
+#                context=os.environ.get("KUBECONTEXT")
+#            )
+#        except config.ConfigException as ce:
+#            print("###### Could not parse kubeconfig file: ", k8s_config)
+#            print(ce)
+#    else:
+#        print("Invalid config file")
+#        print("Terminating program")
+#        sys.exit(0)
+
+    
+
+# client = client.CoreV1Api()
+
+# print("**** Getting controller info ****")
+# print("Listing pods:")
+# get_pods(client, controller_namespace)
+
+
+# # Print controller manager logs
+# print("Controller logs ****")
+# try:
+#     api_instance = client.CoreV1Api()
+#     api_response = api_instance.read_namespaced_pod_log(name=pod_name, namespace=controller_namespace, container='manager')
+#     print(api_response)
+# except ApiException as e:
+#     print('Found exception in reading the logs')
+
+# print("Controller Secrets ****")
+# k = v1.list_namespaced_secret(namespace=controller_namespace, pretty="true")
+# for i in k.items:
+#     # print(i.metadata.name)
+#     print(i)
+
+# k = v1.list_namespaced_secret(namespace=project_namespace, pretty="true")
+# for i in k.items:
+#     # print(i.metadata.name)
+#     print(i)
+
+# k = kubernetes.client.CustomObjectsApi().list_cluster_custom_object(namespace=project_namespace)
+# for i in k.items:
+#     print(i)
 

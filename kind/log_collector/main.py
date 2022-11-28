@@ -32,7 +32,7 @@ def _run_bin_in_venv(venv_context, command):
 def _main():
     venv_path = pathlib.Path.cwd().joinpath('virt')
     venv_context = _venv_create(venv_path)
-    _run_python_in_venv(venv_context, ['-m', 'pip', 'install', '-U', 'pip'])
+    _run_python_in_venv(venv_context, ['-m', 'pip', 'install', '-U', 'pip', '--quiet'])
     _run_bin_in_venv(venv_context, ['pip', 'install', 'attrs', '--quiet'])
     _run_bin_in_venv(venv_context, ['pip', 'install', 'kubernetes', '--quiet'])
     _run_bin_in_venv(venv_context, ['pip', 'install', 'pyyaml', '--quiet'])
