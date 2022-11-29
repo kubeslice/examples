@@ -1,3 +1,4 @@
+import ast
 import os
 import kubernetes
 from kubernetes import client, config
@@ -24,13 +25,54 @@ def get_kubeconfig_file():
 
     return None
 
-def get_pods(client, namespace):
-    ret = client.list_namespaced_pod(namespace)
-    for i in ret.items:
-        print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
-        if "kubeslice-controller-manager" in i.metadata.name:
-            pod_name = i.metadata.name
-            break
+def print_controller_logs(config_file, context, controller_namespace):
+    print("***** Controller manager logs *****")
+    config.load_kube_config(
+                config_file=os.environ.get(config_file),
+                context=context
+            )
+    
+    try:
+        v1 = client.CoreV1Api()
+        pod_name = ""
+    
+        ret = v1.list_namespaced_pod(controller_namespace)
+        for i in ret.items:
+            print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
+            if "kubeslice-controller-manager" in i.metadata.name:
+                pod_name = i.metadata.name
+                break
+
+        api_response = v1.read_namespaced_pod_log(name=pod_name, namespace=controller_namespace, container='manager')
+        print(api_response)
+
+        print()
+        print("**** Secrets ****")
+        k = v1.list_namespaced_secret(namespace=controller_namespace, pretty="true")
+        for i in k.items:
+            print(i)
+
+        print()
+        # print("**** Controller deployments ****")
+        # resp = v1.list_namespaced_deployment(namespace=controller_namespace)
+        # for i in resp.items:
+        #     print(i)
+
+        print()
+        print("**** Controller projects ****")
+        api_instance = kubernetes.client.CustomObjectsApi(v1)
+        # api_response = api_instance.get_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", namespace=controller_namespace, 
+        # plural="projects", name="projects.controller.kubeslice.io")
+        api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="projects", namespace=controller_namespace)
+        # print("Project(s): %s" % api_response["name"])
+        # print("Project(s): %s" % api_response['items'])
+        for i in api_response['items']:
+            metadata = ast.literal_eval(i['metadata']['annotations']['kubectl.kubernetes.io/last-applied-configuration'])
+            # print("Project: %s" % ast.literal_eval(i['metadata']['annotations']['kubectl.kubernetes.io/last-applied-configuration']))
+            print("Project: %s" % metadata['metadata']['name'])
+
+    except config.ConfigException as e:
+        print('Found exception in reading the logs')
 
 def get_contexts(config_file):
     k8s_contexts = []
@@ -93,6 +135,10 @@ if __name__ == "__main__":
     clusters = get_cluster_roles(contexts, config_file)
 
     print(clusters)
+
+    print_controller_logs(config_file, clusters["controller"], controller_namespace)
+
+
 
 
 
