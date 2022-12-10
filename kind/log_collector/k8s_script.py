@@ -70,12 +70,14 @@ def print_controller_logs(config_file, context, controller_namespace):
 
         print()
         print("**** [%s]: Secrets ****" % context)
+        print("**** [%s]: kubectl -n kubeslice-controller get secrets -oyaml ****" % context)
         k = v1.list_namespaced_secret(namespace=controller_namespace, pretty="true")
         for i in k.items:
             print(i)
 
         print()
         print("**** [%s]: Projects ****" % context)
+        print("**** [%s]: kubectl -n kubeslice-controller get projects.controller.kubeslice.io -oyaml ****" % context)
         api_instance = kubernetes.client.CustomObjectsApi(v1)
         api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="projects", namespace=controller_namespace, pretty="true")
 
@@ -88,16 +90,19 @@ def print_controller_logs(config_file, context, controller_namespace):
 
         print()
         print("**** [%s]: Cluster Details ****" % context)
+        print("**** [%s]: kubectl -n %s get clusters.controller.kubeslice.io -oyaml ****" % (context, project_namespace))
         api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="clusters", namespace=project_namespace, pretty="true")
         print(api_response)
 
         print()
         print("**** [%s]: Slice Details ****" % context)
+        print("**** [%s]: kubectl -n %s get sliceconfigs.controller.kubeslice.io -oyaml ****" % (context, project_namespace))
         api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="sliceconfigs", namespace=project_namespace, pretty="true")
         print(api_response)
 
         print()
         print("**** [%s]: Slice QoS Details ****" % context)
+        print("**** [%s]: kubectl -n %s get sliceqosconfig.controller.kubeslice.io -oyaml ****" % (context, project_namespace))
         try:
             api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="sliceqosconfigs", namespace=project_namespace, pretty="true")
             print(api_response)
@@ -106,6 +111,7 @@ def print_controller_logs(config_file, context, controller_namespace):
 
         print()
         print("**** [%s]: SliceResourceQuotaConfig Details ****" % context)
+        print("**** [%s]: kubectl -n %s get sliceresourcequotaconfig.controller.kubeslice.io -oyaml ****" % (context, project_namespace))
         try: 
             api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="sliceresourcequotaconfigs", namespace=project_namespace, pretty="true")
             print(api_response)
@@ -114,6 +120,7 @@ def print_controller_logs(config_file, context, controller_namespace):
 
         print()
         print("**** [%s]: ServiceExportConfig Details ****" % context)
+        print("**** [%s]: kubectl -n %s get serviceexportconfig.controller.kubeslice.io -oyaml ****" % (context, project_namespace))
         try:
             api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="controller.kubeslice.io", version="v1alpha1", plural="serviceexportconfigs", namespace=project_namespace, pretty="true")
             print(api_response)
@@ -139,6 +146,7 @@ def print_worker_logs(config_file, context, project_namespace):
 
         print()
         print("**** [%s]: WorkerSliceConfig Details ****" % context)
+        print("**** [%s]: Command: kubectl -n %s get workersliceconfig.worker.kubeslice.io -oyaml ****" % (context, project_namespace))
         try:
             api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="worker.kubeslice.io", version="v1alpha1", plural="workersliceconfigs", namespace=project_namespace, pretty="true")
             print(api_response)
@@ -147,6 +155,7 @@ def print_worker_logs(config_file, context, project_namespace):
 
         print()
         print("**** [%s]: WorkerSliceGateway Details ****" % context)
+        print("**** [%s]: Command: kubectl -n %s get workerslicegateway.worker.kubeslice.io -oyaml ****" % (context, project_namespace))
         try:
             api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="worker.kubeslice.io", version="v1alpha1", plural="workerslicegateways", namespace=project_namespace, pretty="true")
             print(api_response)
@@ -156,6 +165,7 @@ def print_worker_logs(config_file, context, project_namespace):
 
         print()
         print("**** [%s]: WorkerServiceImport Details ****" % context)
+        print("**** [%s]: Command: kubectl -n %s get workerserviceimport.worker.kubeslice.io -oyaml ****" % (context, project_namespace))
         try:
             api_response = kubernetes.client.CustomObjectsApi().list_namespaced_custom_object(group="worker.kubeslice.io", version="v1alpha1", plural="workerserviceimports", namespace=project_namespace, pretty="true")
             print(api_response)
@@ -234,4 +244,5 @@ if __name__ == "__main__":
     print()
     for cluster in clusters["worker"]:
         print_worker_logs(config_file, cluster, project_namespace)
+
 
