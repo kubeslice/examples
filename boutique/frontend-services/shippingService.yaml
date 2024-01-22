@@ -60,19 +60,3 @@ spec:
   - name: grpc
     port: 50051
     targetPort: 50051
-
----
-apiVersion: networking.kubeslice.io/v1beta1
-kind: ServiceExport
-metadata:
-  name: shipping-service
-spec:
-  slice: boutique-slice
-  selector:
-    matchLabels:
-      app: shippingservice
-      name: kubeslice-demo
-  ports:
-  - name: tcp
-    containerPort: 50051
-    protocol: TCP

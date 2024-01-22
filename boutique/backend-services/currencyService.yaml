@@ -60,19 +60,3 @@ spec:
   - name: grpc
     port: 7000
     targetPort: 7000
-
----
-apiVersion: networking.kubeslice.io/v1beta1
-kind: ServiceExport
-metadata:
-  name: currency-service
-spec:
-  slice: boutique-slice
-  selector:
-    matchLabels:
-      app: currencyservice
-      name: kubeslice-demo
-  ports:
-  - name: tcp
-    containerPort: 7000
-    protocol: TCP

@@ -1,0 +1,45 @@
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: productcatalog-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: productcatalogservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 3550
+    protocol: TCP
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: recommendation-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: recommendationservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 8080
+    protocol: TCP
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: shipping-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: shippingservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 50051
+    protocol: TCP

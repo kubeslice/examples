@@ -61,19 +61,3 @@ spec:
   - name: grpc
     port: 3550
     targetPort: 3550
-
----
-apiVersion: networking.kubeslice.io/v1beta1
-kind: ServiceExport
-metadata:
-  name: productcatalog-service
-spec:
-  slice: boutique-slice
-  selector:
-    matchLabels:
-      app: productcatalogservice
-      name: kubeslice-demo
-  ports:
-  - name: tcp
-    containerPort: 3550
-    protocol: TCP

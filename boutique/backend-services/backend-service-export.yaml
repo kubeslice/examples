@@ -1,0 +1,60 @@
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: ad-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: adservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 9555
+    protocol: TCP
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: currency-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: currencyservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 7000
+    protocol: TCP
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: email-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: emailservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 5000
+    protocol: TCP
+---
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+  name: payment-service
+spec:
+  slice: boutique-slice
+  selector:
+    matchLabels:
+      app: paymentservice
+      name: kubeslice-demo
+  ports:
+  - name: tcp
+    containerPort: 50051
+    protocol: TCP

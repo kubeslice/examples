@@ -57,19 +57,3 @@ spec:
   - name: grpc
     port: 5000
     targetPort: 8080
-
----
-apiVersion: networking.kubeslice.io/v1beta1
-kind: ServiceExport
-metadata:
-  name: email-service
-spec:
-  slice: boutique-slice
-  selector:
-    matchLabels:
-      app: emailservice
-      name: kubeslice-demo
-  ports:
-  - name: tcp
-    containerPort: 5000
-    protocol: TCP

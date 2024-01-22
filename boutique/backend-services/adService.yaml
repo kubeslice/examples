@@ -60,19 +60,3 @@ spec:
     port: 9555
     targetPort: 9555
 # [END gke_release_kubernetes_manifests_microservices_demo]
-
----
-apiVersion: networking.kubeslice.io/v1beta1
-kind: ServiceExport
-metadata:
-  name: ad-service
-spec:
-  slice: boutique-slice
-  selector:
-    matchLabels:
-      app: adservice
-      name: kubeslice-demo
-  ports:
-  - name: tcp
-    containerPort: 9555
-    protocol: TCP
