@@ -9,6 +9,13 @@ spec:
   sliceGatewayProvider:
     sliceGatewayType: OpenVPN
     sliceCaType: Local
+    sliceGatewayServiceType:
+      - cluster: worker-1
+        type: LoadBalancer   # By default, the gateway service type is NodePort.
+        protocol: TCP        # By default, the gateway protocol is UDP
+      # - cluster: worker-2
+      #   type: LoadBalancer   # By default, the gateway service type is NodePort.
+      #   protocol: TCP        # By default, the gateway protocol is UDP
   sliceIpamType: Local
   clusters:
     - worker-1
