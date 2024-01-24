@@ -1,0 +1,32 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: SliceConfig
+metadata: 
+  name: boutique-slice
+  namespace: kubeslice-avesha
+spec:
+  sliceSubnet: 10.11.0.0/16
+  sliceType: Application
+  sliceGatewayProvider:
+    sliceGatewayType: OpenVPN
+    sliceCaType: Local
+  sliceIpamType: Local
+  clusters:
+    - worker-1
+    - worker-2
+  qosProfileDetails:
+    queueType: HTB
+    priority: 1
+    tcType: BANDWIDTH_CONTROL
+    bandwidthCeilingKbps: 20000
+    bandwidthGuaranteedKbps: 10000
+    dscpClass: AF11
+  namespaceIsolationProfile:
+    applicationNamespaces:
+     - namespace: boutique
+       clusters:
+       - '*'
+    isolationEnabled: false                   #make this true in case you want to enable isolation
+    allowedNamespaces:
+     - namespace: kube-system
+       clusters:
+       - '*'
