@@ -1,0 +1,43 @@
+configuration:
+  cluster_configuration:
+    cluster_type: cloud
+    kube_config_path: <merged kubeconfig path>
+    controller:
+      name: controller
+      context_name: <aks-context name>
+      kube_config_path: <kubeconfig path>
+    workers:
+      - name: aks-1
+        context_name: <aks context name>
+        kube_config_path: <aks-context name>
+      - name: ocp-2
+        context_name: <ocp context name>
+        kube_config_path: <kubeconfig path>
+  kubeslice_configuration:
+    project_name: rbc-demo
+  helm_chart_configuration:
+    repo_alias: kubeslice-helm-ent-prod
+    repo_url: https://kubeslice.aveshalabs.io/repository/kubeslice-helm-ent-prod/
+    cert_manager_chart:
+      chart_name: cert-manager
+    controller_chart:
+      chart_name: kubeslice-controller
+      values:
+        kubeslice.license.customerName: 
+        global.profile.openshift: true
+    worker_chart:
+      chart_name: kubeslice-worker
+      values:        
+        global.profile.openshift: true
+    ui_chart:
+      chart_name: kubeslice-ui
+      values:        
+        global.profile.openshift: true
+        kubeslice.uiproxy.service.type: NodePort
+    helm_username: #<not required>
+    helm_password: # <not required>
+    image_pull_secret: #{The image pull secrets. Optional for OpenSource, required for enterprise}
+      registry: #{The endpoint of the OCI registry to use. Default is `https://index.docker.io/v1/`} 
+      username: 
+      password: 
+      email: #{The email to authenticate against the OCI registry}
