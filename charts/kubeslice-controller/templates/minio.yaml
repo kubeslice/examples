@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: minio
-          image: docker.io/aveshasystems/minio:latest
+          image: eengccoelabacrcac1.azurecr.io/sft0/minio:latest
           command:
             - /bin/bash
             - -c
