@@ -1,0 +1,24 @@
+---
+# Default values for nsm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+insecure: true
+global:
+  # set to true to enable Jaeger tracing for NSM components
+  JaegerTracing: true
+
+forwardingPlane:
+  kernelImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-forwarder-kernel
+  kernelImageTag: 1.0.3
+
+nsmgr:
+  imageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-nsmgr
+  imageTag: 1.5.3
+  waitForItImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/wait-for-it
+  waitForItImageTag: 1.0.0
+  excludePrefixesImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-exclude-prefixes-k8s
+  excludePrefixesImageTag: 1.5.2
+
+registryK8sImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-registry-k8s
+registryK8sImageTag: 1.5.4

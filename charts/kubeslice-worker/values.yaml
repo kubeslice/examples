@@ -1,0 +1,83 @@
+operator:
+  image: eengccoelabacrcac1.azurecr.io/sft0/worker-operator-ent
+  tag: 1.5.0
+  pullPolicy: IfNotPresent
+  logLevel: INFO
+
+## Base64 encoded secret values from controller cluster
+controllerSecret:
+  namespace:
+  endpoint:
+  ca.crt:
+  token:
+
+cluster:
+  name:
+  nodeIp: # This field is deprecated. You can set nodeIPs through cluster spec.
+  endpoint:
+
+router:
+  image: eengccoelabacrcac1.azurecr.io/sft0/cmd-nse-vl3
+  tag: 1.0.3
+  pullPolicy: IfNotPresent                                                                                     
+
+routerSidecar:
+  image: eengccoelabacrcac1.azurecr.io/sft0/kubeslice-router-sidecar
+  tag: 1.4.3
+  pullPolicy: IfNotPresent
+
+netop:
+  networkInterface: eth0
+  image: eengccoelabacrcac1.azurecr.io/sft0/netops
+  tag: 0.2.0
+  pullPolicy: IfNotPresent
+
+gateway:
+  image: eengccoelabacrcac1.azurecr.io/sft0/gw-sidecar
+  tag: 0.3.0
+  pullPolicy: IfNotPresent
+  logLevel: INFO
+
+gatewayEdge:
+  image: eengccoelabacrcac1.azurecr.io/sft0/slicegw-edge
+  tag: 1.0.0
+
+openvpn:
+  server:
+    image: eengccoelabacrcac1.azurecr.io/sft0/openvpn-server.alpine.amd64
+    tag: 1.0.1
+    pullPolicy: IfNotPresent
+  client:
+    image: eengccoelabacrcac1.azurecr.io/sft0/openvpn-client.alpine.amd64
+    tag: 1.0.0
+    pullPolicy: IfNotPresent
+
+dns:
+  image: eengccoelabacrcac1.azurecr.io/sft0/dns
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+jaeger:
+  enabled: false
+  
+events:
+  disabled: false
+
+metrics:
+  insecure: false
+  metricResolution: "15s"
+  imagePullPolicy: IfNotPresent
+
+# username & password & email values for imagePullSecrets has to provided to create a secret
+imagePullSecrets:
+  repository: https://index.docker.io/v1/
+  username:
+  password:
+  email:
+
+controllerNamespace: kubeslice-controller
+
+# if you're installing in openshift cluster make this variable true
+global:
+  profile:
+    openshift: false

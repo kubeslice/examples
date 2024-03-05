@@ -1,0 +1,13 @@
+---
+# Default values for admission-webhook.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+webhookImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-admission-webhook-k8s
+webhookImageTag: 1.6.4
+
+nsmInjectContainerImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-nsc
+nsmInjectContainerImageTag: 1.5.7
+
+nsmInjectInitContainerImageRegistry: eengccoelabacrcac1.azurecr.io/sft0/cmd-nsc-init
+nsmInjectInitContainerImageTag: 1.5.5

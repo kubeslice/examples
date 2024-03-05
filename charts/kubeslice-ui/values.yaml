@@ -1,0 +1,51 @@
+# Default values for k-native.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  profile:
+    openshift: false
+
+
+kubeslice:
+  ui:
+    image: eengccoelabacrcac1.azurecr.io/sft0/kubeslice-ui-ent
+    tag: 1.5.0
+    pullPolicy: IfNotPresent
+  uiv2:
+    image: eengccoelabacrcac1.azurecr.io/sft0/kubeslice-ui-v2-ent
+    tag: 1.5.0
+    pullPolicy: IfNotPresent
+  dashboard:
+    image: eengccoelabacrcac1.azurecr.io/sft0/kubeslice-kubernetes-dashboard
+    tag: v2.5.1
+    pullPolicy: IfNotPresent
+  uiproxy:
+    image: eengccoelabacrcac1.azurecr.io/sft0/kubeslice-ui-proxy
+    tag: 1.4.0
+    pullPolicy: IfNotPresent
+    service:
+      ## For kind, set this to NodePort, elsewhere use LoadBalancer or NodePort
+      ## Ref: https://kubernetes.io/docs/user-guide/services/#publishing-services---service-types
+      ##
+      type: LoadBalancer
+      ## if type selected to NodePort then set nodePort value if required
+      # nodePort:
+  apigw:
+    image: eengccoelabacrcac1.azurecr.io/sft0/kubeslice-api-gw-ent
+    tag: 1.11.0
+    pullPolicy: IfNotPresent
+
+  workerinstaller:
+    image: eengccoelabacrcac1.azurecr.io/sft0/worker-installer
+    tag: 1.1.10
+    pullPolicy: IfNotPresent
+    
+  prometheus:
+    url: http://kubeslice-controller-prometheus-service:9090
+
+# username & password & email values for imagePullSecrets has to provided to create a secret
+imagePullSecrets:
+  repository: https://index.docker.io/v1/
+  username:
+  password:
+  email:
