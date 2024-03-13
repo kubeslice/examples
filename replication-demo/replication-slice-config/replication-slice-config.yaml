@@ -1,0 +1,9 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: MigrationSlice
+metadata:
+  name: boutique-migration
+  namespace: kubeslice-avesha
+spec:
+  destinationCluster: worker-2
+  sourceCluster: worker-1
+  minIOBucketName: boutique-migration
