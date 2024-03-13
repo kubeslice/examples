@@ -1,8 +1,0 @@
-apiVersion: controller.kubeslice.io/v1alpha1
-kind: MigrationJobConfig
-metadata:
-  name: boutique-migration
-  namespace: kubeslice-avesha
-spec:
-  migrationSliceName: boutique-migration
-  namespace: boutique
