@@ -1,0 +1,49 @@
+# Default values for k-native.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# if you're installing in openshift cluster make this variable true
+global:
+  imageRegistry: docker-sft0.rbcartifactory.fg.rbc.com/anand/avesha
+  profile:
+    openshift: false
+kubeslice:
+  rbacproxy:
+    image: kubebuilder-kube-rbac-proxy
+    tag: v0.8.0
+  controller:
+    logLevel: info
+    rbacResourcePrefix: kubeslice-rbac
+    projectnsPrefix: kubeslice
+    endpoint:
+    image: kubeslice-controller-ent
+    tag: 1.6.1
+    pullPolicy: IfNotPresent
+    migration:
+      minio:
+        install: "true"
+        storage: 1Gi
+        username: minioadmin
+        password: minioadmin
+  ovpnJob:
+    image: gateway-certs-generator
+    tag: 0.3.0
+  prometheus:
+    enabled: true
+    url: http://kubeslice-controller-prometheus-service:9090
+  events:
+    disabled: false
+  # license details by default mode set to auto and license set to trial - please give company-name or user-name as customerName
+  license:
+    # possible license type values ["kubeslice-trial-license"]
+    type: kubeslice-trial-license
+    # possible license mode - ["auto", "manual"]
+    mode: auto
+    # please give company-name or user-name as customerName
+    customerName: ""
+# username & password & email values for imagePullSecrets has to provided to create a secret
+imagePullSecrets:
+  repository: https://index.docker.io/v1/
+  username:
+  password:
+  email:

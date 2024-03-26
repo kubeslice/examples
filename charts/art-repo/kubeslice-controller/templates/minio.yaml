@@ -1,0 +1,90 @@
+{{- if eq $.Values.kubeslice.controller.migration.minio.install "true" }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio
+  labels:
+    name: minio
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-storage
+  namespace: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.kubeslice.controller.migration.minio.storage }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: '{{ .Values.global.imageRegistry }}/minio:latest'
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - minio server /data --console-address :9090
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: minio-credentials
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: minio-credentials
+          volumeMounts:
+            - mountPath: /data
+              name: minio-storage
+      volumes:
+        - name: minio-storage
+          persistentVolumeClaim:
+            claimName: minio-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: minio
+  name: minio
+spec:
+  selector:
+    app: minio
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: minio
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-credentials
+  namespace: minio
+type: Opaque
+stringData:
+  username: "{{ $.Values.kubeslice.controller.migration.minio.username }}"
+  password: "{{ $.Values.kubeslice.controller.migration.minio.password }}"
+  credentialsFile: |-
+    [default]
+    aws_access_key_id={{ $.Values.kubeslice.controller.migration.minio.username }}
+    aws_secret_access_key={{ $.Values.kubeslice.controller.migration.minio.password }}
+{{- end }}

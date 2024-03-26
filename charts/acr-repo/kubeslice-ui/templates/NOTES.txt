@@ -1,0 +1,26 @@
+Thank you for installing {{ .Chart.Name }}.
+
+{{- if eq $.Values.kubeslice.uiproxy.service.type "LoadBalancer" }}
+*  Run the following command to get Kubeslice Manager dashboard URL:
+
+   export SERVICE_IP=$(kubectl get svc -n {{ .Release.Namespace }} kubeslice-ui-proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   echo https://$SERVICE_IP/login
+
+{{- else if eq $.Values.kubeslice.uiproxy.service.type "NodePort" }}
+*  Run the following commands to get Kubeslice Manager dashboard URL:
+
+   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services kubeslice-ui-proxy)
+   export NODE_IP=$(kubectl get nodes --namespace kubeslice-controller -o jsonpath={.items[0].status.addresses[?\(@.type==\'ExternalIP\'\)].address})
+   echo https://$NODE_IP:$NODE_PORT/login
+
+   Make sure that your security settings allow incoming connection to your Host machine on the nodeport mentioned.
+
+{{- else if eq $.Values.kubeslice.uiproxy.service.type "ClusterIP" }}
+*  You can port-forward kubeslice-ui-proxy service in the namespace {{ .Release.Namespace }} to access Kubeslice Manager dashboard. 
+
+   kubectl -n {{ .Release.Namespace }} port-forward svc/kubeslice-ui-proxy 8001:443
+
+   The dashboard should be accesible on https://localhost:8001/login
+{{- end }}
+
+To learn more about Kubeslice visit: https://docs.avesha.io/documentation/enterprise/

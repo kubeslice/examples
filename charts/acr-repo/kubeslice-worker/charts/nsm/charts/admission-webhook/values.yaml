@@ -1,0 +1,24 @@
+---
+# Default values for admission-webhook.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  nsmw_docker_existingImagePullSecret: "kubeslice-image-pull-secret"
+  # IF You dont have existing secret then pass all below values it will create new secret "avesha-docker-ips"
+  ## MANDOTORY FIELDS IF EXISTING SECRET NOT PRESENT ##
+  nsmw_docker_imagePullSecrets:
+    repository: 
+    username: ''
+    password: ''
+    email: ''
+  imageRegistry: eengccoelabacrcac1.azurecr.io/sft0/kubeslice
+
+webhookImageRegistry: cmd-admission-webhook-k8s
+webhookImageTag: 1.7.0
+
+nsmInjectContainerImageRegistry: cmd-nsc
+nsmInjectContainerImageTag: 1.5.7
+
+nsmInjectInitContainerImageRegistry: cmd-nsc-init
+nsmInjectInitContainerImageTag: 1.5.5
