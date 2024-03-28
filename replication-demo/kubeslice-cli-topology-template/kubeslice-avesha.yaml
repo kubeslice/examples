@@ -1,0 +1,17 @@
+```
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: Project
+metadata:
+  name: kubeslice-avesha
+  namespace: kubeslice-controller
+spec:
+  serviceAccount:
+    readOnly:
+      - <readonly user1>
+      - <readonly user2>
+      - <readonly user3>
+    readWrite:
+      - <readwrite user1>
+      - <readwrite user2>
+      - <readwrite user3>
+```
