@@ -1,0 +1,36 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: SliceConfig
+metadata:
+  name: demo
+spec:
+  overlayNetworkDeploymentMode: "single-network"
+  sliceType: Application
+  clusters:
+    - worker-5
+    - worker-4
+  namespaceIsolationProfile:
+    applicationNamespaces:
+      - namespace: appns
+        clusters:
+          - '*'
+  # with-net
+  sliceSubnet: 10.63.0.0/16
+  sliceGatewayProvider:
+    sliceGatewayType: OpenVPN
+    sliceCaType: Local
+  qosProfileDetails:
+    queueType: HTB
+    priority: 0
+    tcType: BANDWIDTH_CONTROL
+    bandwidthCeilingKbps: 30000
+    bandwidthGuaranteedKbps: 20000
+    dscpClass: AF11
+  sliceIpamType: Local
+  # ext gw
+  externalGatewayConfig:
+  - gatewayType: "envoy"
+    clusters:
+      - worker-5 
+    vpcServiceAccess:
+      egress:
+        enabled: true

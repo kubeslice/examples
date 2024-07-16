@@ -1,0 +1,12 @@
+apiVersion: networking.kubeslice.io/v1alpha1
+kind: VpcServiceImport
+metadata:
+  name: cosmosdb
+spec:
+  sliceName: demo
+  fqdn:
+    - avesha.mongo.cosmos.azure.com # host url from connection strings page
+  ports:
+    - name: https
+      port: 10256
+      protocol: HTTPS
