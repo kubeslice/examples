@@ -1,16 +1,16 @@
 apiVersion: controller.kubeslice.io/v1alpha1
 kind: SliceConfig
 metadata:
-  name: demo
+  name: kubeaccess-demo
 spec:
   overlayNetworkDeploymentMode: "single-network"
   sliceType: Application
   clusters:
-    - worker-5
-    - worker-4
+    - azure-1 # has access to the vpc service
+    - linode-2 # workloads from this cluster wants to consume the vpc service
   namespaceIsolationProfile:
-    applicationNamespaces:
-      - namespace: appns
+    applicationNamespaces: # workloads running on these namespaces will be able to access the imported service 
+      - namespace: appns 
         clusters:
           - '*'
   # with-net
@@ -30,7 +30,7 @@ spec:
   externalGatewayConfig:
   - gatewayType: "envoy"
     clusters:
-      - worker-5 
+      - azure-1
     vpcServiceAccess:
       egress:
         enabled: true

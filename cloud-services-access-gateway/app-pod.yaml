@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: alpine-shell
+  namespace: appns # application namespace, as defined in slice config
+spec:
+  containers:
+  - name: busybox
+    image: alpine:latest
+    command: ["sh"]
+    tty: true  # Enables pseudo-terminal for interactive use

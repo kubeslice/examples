@@ -3,10 +3,10 @@ kind: VpcServiceImport
 metadata:
   name: cosmosdb
 spec:
-  sliceName: demo
+  sliceName: kubeaccess-demo
   fqdn:
-    - avesha.mongo.cosmos.azure.com # host url from connection strings page
+    - avesha.mongo.cosmos.azure.com # url to reach the service (can be found on the "connection strings" section)
   ports:
     - name: https
-      port: 10256
+      port: 10256 # (can be found on the "connection strings" section in azure dashboard)
       protocol: HTTPS
