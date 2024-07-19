@@ -1,0 +1,36 @@
+apiVersion: controller.kubeslice.io/v1alpha1
+kind: SliceConfig
+metadata:
+  name: kubeaccess-demo
+spec:
+  overlayNetworkDeploymentMode: "single-network"
+  sliceType: Application
+  clusters:
+    - azure-1 # has access to the vpc service
+    - linode-2 # workloads from this cluster wants to consume the vpc service
+  namespaceIsolationProfile:
+    applicationNamespaces: # workloads running on these namespaces will be able to access the imported service 
+      - namespace: appns 
+        clusters:
+          - '*'
+  # with-net
+  sliceSubnet: 10.63.0.0/16
+  sliceGatewayProvider:
+    sliceGatewayType: OpenVPN
+    sliceCaType: Local
+  qosProfileDetails:
+    queueType: HTB
+    priority: 0
+    tcType: BANDWIDTH_CONTROL
+    bandwidthCeilingKbps: 30000
+    bandwidthGuaranteedKbps: 20000
+    dscpClass: AF11
+  sliceIpamType: Local
+  # ext gw
+  externalGatewayConfig:
+  - gatewayType: "envoy"
+    clusters:
+      - azure-1
+    vpcServiceAccess:
+      egress:
+        enabled: true
