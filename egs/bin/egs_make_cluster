@@ -23,6 +23,6 @@ kubectl create ns ns1
 kubectl create ns ns2
 
 # Copy the kubeconfig where egs installer can get it
-cp ~/.kube/config .
+cp ~/.kube/config ./kubeconfig.yaml
 
 
