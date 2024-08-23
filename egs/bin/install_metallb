@@ -1,0 +1,51 @@
+#!/usr/bin/bash
+
+TARGET_NS=smart-scaler
+YAML_PATH=rlautoscaler/k8s/kind
+
+set -o xtrace
+
+PREFIX=`kubectl get nodes -o wide | grep -m 1 control | awk '{ print $6 }' | cut -d'.' -f1-2`
+
+# Set the address pool range based on the cluster name
+CONTEXT=`kubectx -c`
+if [[ $CONTEXT == "kind-saastest" ]]; then
+    # Use 100-150 for saas
+    RANGE="$PREFIX.255.100-$PREFIX.255.150"
+else
+    # use 200-250 for boutique
+    RANGE="$PREFIX.255.200-$PREFIX.255.250"
+fi
+echo "Range is:" $RANGE
+
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+
+sleep 20
+
+kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+
+# Get the address range to use
+#docker network inspect -f '{{.IPAM.Config}}' kind
+
+# Create issuer
+kubectl apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: example
+  namespace: metallb-system
+spec:
+  addresses:
+  - $RANGE
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: empty
+  namespace: metallb-system
+EOF
+
+

@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+
+kind delete cluster --name=egs
+rm -rf ~/egs/egs-installation/installation-files/
+#echo Cleanup any old state
+#docker network disconnect "kind" "kind-registry"
