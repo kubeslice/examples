@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+
+kind create cluster --name=egs --config - <<EOF
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- role: control-plane
+  image: kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
+  # required for GPU workaround
+  extraMounts:
+    - hostPath: /dev/null
+      containerPath: /var/run/nvidia-container-devices/all
+EOF
+
+install_metallb
+
+# Label node so EGS will use it
+#kubectl label nodes egs-control-plane node.kubernetes.io/instance-type=kind-node-12
+kubectl label nodes egs-control-plane node.kubernetes.io/instance-type=nvidia-geforce-gtx-1060
+
+# Create a couple "user" namespaces/workspaces
+kubectl create ns ns1
+kubectl create ns ns2
+
+# Copy the kubeconfig where egs installer can get it
+cp ~/.kube/config ./kubeconfig.yaml
+
+

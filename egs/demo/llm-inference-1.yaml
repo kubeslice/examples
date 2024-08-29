@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: llm-inference
+    purpose: llm-demo
+  name: llm-demo
+  #namespace: llama2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  llm-inference
+      purpose: llm-demo
+  template:
+    metadata:
+      labels:
+        app:  llm-inference
+        purpose: llm-demo
+    spec:
+      containers:
+        - command:
+            - text-generation-launcher 
+          resources:
+            # requests:
+            #   memory: 1000Mi
+            #   cpu: 500m
+            #   nvidia.com/gpu: "1"
+            limits:
+              # memory: 16000Mi
+              # cpu: 4000m
+              nvidia.com/gpu: "1"
+          env:
+            - name: MODEL_ID
+              value: openai-community/gpt2 # TheBloke/LLaMA-30b-AWQ  #TheBloke/Llama-2-7B-Chat-AWQ #"HuggingFaceH4/zephyr-7b-beta" #bigscience/bloom-560m #"bigscience/bloom-560m"
+            - name: gpus
+              value: "all"
+            - name: shm-size
+              value: "2g"
+            - name: HUGGING_FACE_HUB_TOKEN
+              value: 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
+            - name: MAX_CONCURRENT_REQUESTS
+              value: "128"
+            - name: MAX_BATCH_TOTAL_TOKENS #MAX_BATCH_PREFILL_TOKENS #
+              value: "5000"
+            - name: DISABLE_CUSTOM_KERNELS
+              value: "true"
+            - name: USE_FLASH_ATTENTION
+              value: "false"
+            # - name: QUANTIZE
+            #   value: awq
+            # - name: MAX_INPUT_TOKENS
+            #   value: "1000"
+          image: ghcr.io/huggingface/text-generation-inference:sha-06edde9 # ghcr.io/huggingface/text-generation-inference:2.0.4
+          name: text-generation-inference
+          ports:
+            - containerPort: 80
+              name: http
+          volumeMounts:
+            - mountPath: /data
+              name: llm
+      # nodeSelector:
+      #   compute: gpu-karpenter
+      tolerations:
+        - key: "nvidia.com/gpu"
+          effect: "NoSchedule"
+          value: "present"
+      volumes:
+        - name: llm
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+  labels:
+    purpose: llm-demo
+  name:  llm-inference
+  
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app:  llm-inference
+    purpose: llm-demo
+  type: LoadBalancer
+
+
+
+
