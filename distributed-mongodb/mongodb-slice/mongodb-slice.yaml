@@ -1,7 +1,7 @@
 apiVersion: controller.kubeslice.io/v1alpha1
 kind: SliceConfig
 metadata:
-  name: mongodb-slice
+  name: demo-slice
   namespace: kubeslice-mongodb-project
 spec:
   sliceSubnet: 192.168.0.0/16
