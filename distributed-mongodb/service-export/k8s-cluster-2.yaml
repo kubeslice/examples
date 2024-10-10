@@ -4,7 +4,7 @@ metadata:
  name: multi-replica-set-1-0
  namespace: mongodb
 spec:
- slice: mongodb-slice
+ slice: demo-slice
  selector:
    matchLabels:
      statefulset.kubernetes.io/pod-name: multi-replica-set-1-0
