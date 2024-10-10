@@ -1,0 +1,17 @@
+apiVersion: networking.kubeslice.io/v1beta1
+kind: ServiceExport
+metadata:
+ name: multi-replica-set-0-0
+ namespace: mongodb
+spec:
+ slice: mongodb-slice
+ selector:
+   matchLabels:
+     statefulset.kubernetes.io/pod-name: multi-replica-set-0-0
+ ingressEnabled: false
+ aliases:
+ - multi-replica-set-0-0-svc.mongodb.svc.cluster.local
+ ports:
+ - name: tcp
+   containerPort: 27017
+   protocol: TCP
