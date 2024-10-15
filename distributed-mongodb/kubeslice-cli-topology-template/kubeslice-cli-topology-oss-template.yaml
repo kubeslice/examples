@@ -1,0 +1,34 @@
+configuration:
+  cluster_configuration:
+    kube_config_path: /path/to/merged/kubeconfig/merged.config #{specify the kube config file to use for topology setup; for topology only}
+    cluster_type: cloud #{optional: specify the type of cluster. Valid values are kind, cloud, data-center}
+    controller:
+      name: controller #{the user defined name of the controller cluster}
+      context_name: k8s-cluster-1 #{the name of the context to use from kubeconfig file; for topology only}
+      control_plane_address: https://35.243.149.48 #{the address of the control plane kube-apiserver. kubeslice-cli determines the address from kubeconfig}
+    workers: #{specify the list of worker clusters}
+    - name: worker-1 #{the user defined name of the worker cluster}
+      context_name: k8s-cluster-1 #{the name of the context to use from the kubeconfig file; for topology only}
+      control_plane_address: https://35.243.149.48 #{the address of the control plane kube-apiserver. kubeslice-cli determines the address from kubeconfig}
+    - name: worker-2  #{the user defined name of the worker cluster}
+      context_name: k8s-cluster-2 #{the name of the context to use from the kubeconfig file; for topology only}
+      control_plane_address: https://35.231.51.208 #{the address of the control plane kube-apiserver. kubeslice-cli determines the address from kubeconfig}
+    - name: worker-3  #{the user defined name of the worker cluster}
+      context_name: k8s-cluster-3 #{the name of the context to use from the kubeconfig file; for topology only}
+      control_plane_address: https://34.73.76.225 #{the address of the control plane kube-apiserver. kubeslice-cli determines the address from kubeconfig}
+  kubeslice_configuration:
+    project_name: mongodb-project #{the name of the KubeSlice Project}
+  helm_chart_configuration:
+    repo_alias: kubeslice-helm-ent-prod #{The alias of the helm repo for KubeSlice Charts}
+    repo_url: https://kubeslice.aveshalabs.io/repository/kubeslice-helm-ent-stage/ #{The URL of the Helm Charts for KubeSlice}
+    #cert_manager_chart:
+      #chart_name: cert-manager #{The name of the Cert Manager Chart}
+      #version: #{The version of the chart to use. Leave blank for latest version}
+    controller_chart:
+      chart_name: kubeslice-controller #{The name of the Controller Chart}
+      version: #{The version of the chart to use. Leave blank for latest version}
+      values: #(Values to be passed as --set arguments to helm install)
+    worker_chart:
+      chart_name: kubeslice-worker #{The name of the Worker Chart}
+      version: #{The version of the chart to use. Leave blank for latest version}
+      values: #(Values to be passed as --set arguments to helm install)
