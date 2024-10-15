@@ -21,9 +21,9 @@ configuration:
   helm_chart_configuration:
     repo_alias: kubeslice-helm-ent-prod #{The alias of the helm repo for KubeSlice Charts}
     repo_url: https://kubeslice.aveshalabs.io/repository/kubeslice-helm-ent-stage/ #{The URL of the Helm Charts for KubeSlice}
-    cert_manager_chart:
-      chart_name: cert-manager #{The name of the Cert Manager Chart}
-      version: #{The version of the chart to use. Leave blank for latest version}
+    #cert_manager_chart:
+      #chart_name: cert-manager #{The name of the Cert Manager Chart}
+      #version: #{The version of the chart to use. Leave blank for latest version}
     controller_chart:
       chart_name: kubeslice-controller #{The name of the Controller Chart}
       version: #{The version of the chart to use. Leave blank for latest version}
