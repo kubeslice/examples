@@ -9,6 +9,16 @@ spec:
   sliceGatewayProvider:
     sliceGatewayType: OpenVPN
     sliceCaType: Local
+    sliceGatewayServiceType:
+      - cluster: worker-1
+        type: LoadBalancer
+        protocol: TCP
+      - cluster: worker-2
+        type: LoadBalancer
+        protocol: TCP
+      - cluster: worker-3
+        type: LoadBalancer
+        protocol: TCP
   sliceIpamType: Local
   clusters:
     - worker-1
