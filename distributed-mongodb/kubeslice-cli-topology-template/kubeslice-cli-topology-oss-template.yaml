@@ -19,8 +19,8 @@ configuration:
   kubeslice_configuration:
     project_name: mongodb-project #{the name of the KubeSlice Project}
   helm_chart_configuration:
-    repo_alias: kubeslice-helm-ent-prod #{The alias of the helm repo for KubeSlice Charts}
-    repo_url: https://kubeslice.aveshalabs.io/repository/kubeslice-helm-ent-stage/ #{The URL of the Helm Charts for KubeSlice}
+    repo_alias: kubeslice-helm #{The alias of the helm repo for KubeSlice Charts}
+    repo_url: https://kubeslice.github.io/kubeslice/ #{The URL of the Helm Charts for KubeSlice}
     #cert_manager_chart:
       #chart_name: cert-manager #{The name of the Cert Manager Chart}
       #version: #{The version of the chart to use. Leave blank for latest version}
