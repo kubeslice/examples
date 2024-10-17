@@ -20,7 +20,7 @@ configuration:
     project_name: mongodb-project #{the name of the KubeSlice Project}
   helm_chart_configuration:
     repo_alias: kubeslice-helm-ent-prod #{The alias of the helm repo for KubeSlice Charts}
-    repo_url: https://kubeslice.aveshalabs.io/repository/kubeslice-helm-ent-stage/ #{The URL of the Helm Charts for KubeSlice}
+    repo_url: https://kubeslice.aveshalabs.io/repository/kubeslice-helm-ent-prod/ #{The URL of the Helm Charts for KubeSlice}
     #cert_manager_chart:
       #chart_name: cert-manager #{The name of the Cert Manager Chart}
       #version: #{The version of the chart to use. Leave blank for latest version}
@@ -40,6 +40,6 @@ configuration:
     helm_password: #{Helm Password if the repo is private}
     image_pull_secret: #{The image pull secrets. Optional for OpenSource, required for enterprise}
       registry: https://index.docker.io/v1/ #{The endpoint of the OCI registry to use}
-      username: aveshaenterprise #{The username to authenticate against the OCI registry}
+      username: <username> #{The username to authenticate against the OCI registry}
       password: <token > #{The password to authenticate against the OCI registry}
-      email: richie@aveshasystems.com #{The email to authenticate against the OCI registry}
+      email: <email address> #{The email to authenticate against the OCI registry}
